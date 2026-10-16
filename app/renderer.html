@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="笑食天下 · 收藏喜欢的味道，记住每一餐的美好。Windows 桌面应用交互原型。">
+<title>笑食天下 · 我的私人菜单</title>
+<style>
+__BASE_CSS__
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="sidebar">
+  <a class="brand" href="#menu" aria-label="笑食天下首页"><span class="logo-art"><img data-brand-logo alt="笑食天下 Logo"></span><span class="brand-sub">A TASTE OF YOUR LIFE</span></a>
+  <div class="nav-label">我的美食手记</div>
+  <nav class="nav" aria-label="主要导航">
+   <button data-view="menu" class="active" title="我的菜单"><span data-icon="grid"></span>我的菜单<span class="count" id="navCount">8</span></button>
+   <button data-view="book" title="翻阅菜单"><span data-icon="book"></span>翻阅菜单</button>
+   <button data-view="calendar" title="饮食日历"><span data-icon="calendar"></span>饮食日历</button>
+   <button data-view="settings" title="设置与备份"><span data-icon="settings"></span>设置与备份</button>
+  </nav>
+  <div class="sidebar-rule"></div>
+  <button class="side-fav" id="sideFav" data-view="favorites" title="特别喜欢"><span data-icon="heart"></span>特别喜欢<span class="count" id="favCount" style="font-size:10px;margin-left:auto">4</span></button>
+  <div class="side-note"><svg class="bowl" viewBox="0 0 160 90"><path d="M20 43h120c-4 27-22 36-60 36S24 70 20 43Z"/><path d="M32 39c7-8 18-12 48-12s41 4 48 12M58 82h44M65 18c-9-8 6-10 0-17M82 18c-9-8 6-10 0-17M99 18c-9-8 6-10 0-17"/><path d="m113 19 33-17m-35 23 38-15"/></svg><p>一日三餐<br>四季有味</p><small>把日子，过得有滋有味。</small></div>
+  <div class="side-bottom"><span class="dot"></span><span>交互原型 · 浏览器本地保存</span></div>
+ </aside>
+ <div class="workspace">
+  <header class="topbar"><div class="breadcrumbs">私人美食档案<span>/</span><strong id="breadcrumb">我的菜单</strong></div><div class="top-actions"><label class="search"><span data-icon="search"></span><input id="globalSearch" type="search" placeholder="寻找记忆里的味道…" aria-label="搜索菜名或标签"><kbd>/</kbd></label><button class="btn primary" id="addGlobal"><span data-icon="plus"></span>记下一道美味</button></div></header>
+  <main id="main" class="content"></main>
+ </div>
+</div>
+<dialog id="detailDialog" class="detail-dialog" aria-label="菜品详情"></dialog>
+<dialog id="formDialog" class="form-dialog" aria-label="新增记录"></dialog>
+<dialog id="auxDialog" aria-label="更多操作"></dialog>
+<dialog id="randomDialog" class="random-dialog" aria-label="今天吃什么"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+__CORE_JS__
+</script>
+</body>
+</html>

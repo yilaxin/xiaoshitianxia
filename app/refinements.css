@@ -1,0 +1,73 @@
+/* Keep controls distinct from the warm paper without changing the visual theme. */
+:root { --control-bg:#ece3d5; --control-border:#c9b99f; --control-text:#70553a; }
+.btn.outline,.btn.soft { background:var(--control-bg); border-color:var(--control-border); color:var(--control-text); }
+.btn.outline:hover,.btn.soft:hover { background:#e0d2bd; border-color:#ad9471; }
+.btn.text { padding:8px 10px; border-color:#d0bda2; background:#eee3d2; color:#8c3c31; }
+.btn.text:hover { background:#e0cdb5; }
+.icon-btn { background:#eee6d8; border:1px solid #d2c3ad; color:#80674a; }
+.icon-btn:hover { background:#e0d0b9; border-color:#b79d79; }
+.chip { background:#eee7db; border-color:#cfbfa7; color:#806548; }
+.chip:hover { background:#e0d2bf; }
+.chip.active { background:#4e473b; color:#fff8eb; border-color:#4e473b; }
+.nav button:not(.active) { color:#736047; }
+.nav button.active { background:#e3d5c1; }
+.side-fav { border-radius:7px; color:#7a6044; }
+.side-fav:hover { background:#e5d8c4; }
+.section-controls button { background:#e9ddca; border:1px solid #c9b79a; padding:8px 11px; border-radius:5px; color:#755637; }
+.section-controls button:hover { background:#dfcbae; }
+.section-controls select,.book-toolbar select { background:#eee5d7; border:1px solid #ccbaa0; padding:7px 9px; border-radius:5px; color:#806344; }
+.hero .hero-cta { text-decoration:underline; text-underline-offset:5px; }
+.setting-cats button,.inline-picks button { background:#f0e7d8; border-color:#cbb79a; color:#806344; }
+.setting-cats button:hover,.inline-picks button:hover { background:#e0ceb2; }
+.setting-cats button span { color:#93744e; }
+.form-tabs button { color:#80674b; }
+.upload { background:#eee3d1; border-color:#b59c78; }
+.upload:hover { background:#e6d6bc; }
+.today-btn { background:#eee4d5; border-color:#c6b295; color:#7c5d3c; }
+.day:hover { background:#eae0cf; }
+.book-nav .btn:disabled,.btn:disabled,.icon-btn:disabled { background:#f0ece4; border-color:#e0d8ca; color:#a99d8c; opacity:.55; box-shadow:none; transform:none; }
+.logo-art { border-radius:22%; }
+.brand .logo-art { border-radius:22px; }
+.about-logo { border-radius:28px; }
+.cover-border .logo-art,.book-front-face .logo-art { border-radius:27px; }
+.btn.danger-outline { background:#f3e5de; color:#963f36; border:1px solid #c79988; }
+.btn.danger-outline:hover { background:#ecd0c4; border-color:#aa6c58; }
+.danger-action { color:#984d3e; font-size:10px; border:1px solid #d3af9b; border-radius:4px; padding:6px 9px; background:#f3e8dd; }
+.danger-action:hover { background:#e9d3c1; }
+.detail-destructive { display:flex; justify-content:flex-end; padding-top:19px; border-top:1px solid var(--line); margin-top:21px; }
+.history-actions { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:10px; }
+.history-actions .btn.text.small { margin:0; padding:5px 8px!important; font-size:10px!important; }
+.confirm-dialog { width:465px; }
+.confirm-description { font-size:13px; color:#786650; line-height:1.9; }
+.delete-impact { margin-top:16px; padding:14px 17px; background:#f1e6d7; border:1px solid #e0cdb6; border-radius:7px; color:#8c7051; font-size:11px; line-height:1.9; }
+.delete-impact p+p { margin-top:5px; }
+.confirm-dialog .dialog-actions small { max-width:44%; }
+.toast.with-action { display:flex; align-items:center; gap:22px; pointer-events:auto; }
+.toast .undo-button { border:1px solid #e1c8a4; color:#ffebc8; border-radius:5px; padding:5px 10px; font-size:12px; background:#ffffff0c; white-space:nowrap; }
+.toast .undo-button:hover { background:#ffffff24; }
+.empty-meal-mark { display:flex; flex-direction:column; gap:3px; align-items:center; color:#a68b65; font:9px var(--sans); margin-top:4px; }
+.empty-meal-mark svg { width:22px; height:22px; }
+.book-stage { perspective:5000px; overflow:hidden; }
+.book-cover { transition:transform .25s,box-shadow .25s; }
+.book-cover:hover { transform:translateY(-3px) rotateY(-4deg); box-shadow:16px 20px 30px #36281c36,3px 0 0 #d4bea0,6px 0 0 #eee3cf,8px 0 0 #d8c7aa; }
+.book-cover:focus-visible { outline:3px solid #b89566; outline-offset:7px; }
+.cover-open-hint { display:flex; align-items:center; gap:6px; margin-top:21px; font-size:10px; color:#e5c597; letter-spacing:1px; }
+.cover-open-hint svg { width:14px!important; height:14px!important; margin:0!important; stroke-width:1.6!important; }
+.book-cover-turner { position:absolute; z-index:5; transform-style:preserve-3d; transform-origin:left center; pointer-events:none; }
+.book-stage:has(.book-cover-space) { perspective:none; overflow:visible; }
+.book-cover-space { position:absolute; inset:0; z-index:5; perspective:5000px; transform-style:preserve-3d; pointer-events:none; }
+.book-opening-paper { position:absolute; z-index:0; pointer-events:none; border:1px solid #deceb6; border-radius:4px 8px 8px 4px; background:linear-gradient(90deg,#eee5d2 0%,#f7f1e3 47%,#deceb3 49.7%,#d2bb96 50%,#f8f3e8 52%,#fffaf0 100%); box-shadow:0 5px 0 #d8c8ad,0 8px 0 #eee3cf,0 14px 24px #5a3e241c; }
+.book-stage[aria-busy=true]>.book { position:relative; z-index:1; }
+.book-front-face,.book-back-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:3px 9px 9px 3px; overflow:hidden; }
+.book-front-face { transform:translateZ(.5px); }
+.book-cover-space .book-back-face { transform:rotateY(180deg) translateZ(.5px); }
+.book-front-face { background:#753c32; color:#e6d0a9; padding:30px; border-left:12px solid #69352d; display:flex; box-shadow:9px 10px 25px #36281c26; }
+.book-front-face .cover-border { border:1px solid #ba97705c; flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 15px; text-align:center; }
+.book-front-face .logo-art { width:190px; height:190px; background:#fffdf5; box-shadow:0 3px 15px #321d1725; margin:0 auto 30px; }
+.book-front-face .cover-border p { font-size:9px; letter-spacing:2px; color:#c9ad88; line-height:2; }
+.book-back-face { transform:rotateY(180deg); background:#f5efdf; border:1px solid #d9c9ae; box-shadow:inset -15px 0 25px #7d5c2b12; display:grid; place-items:center; }
+.book-back-face:before { content:''; position:absolute; inset:26px; border:1px solid #d7c6a855; }
+.book-back-face .logo-art { width:100px; height:100px; opacity:.12; mix-blend-mode:multiply; }
+.book-stage[aria-busy=true] .book { pointer-events:none; }
+@media(max-width:900px) { .section-controls { gap:8px; } .section-controls button { padding:7px 9px; } .book-front-face { padding:22px; } .book-front-face .logo-art { width:150px; height:150px; } }
+@media(max-width:680px) { .brand .logo-art { border-radius:10px; } .section-controls button { padding:6px 8px; } .section-controls select { padding:6px; } .toast.with-action { gap:12px; max-width:90vw; width:max-content; } .confirm-dialog .dialog-actions { flex-wrap:wrap; } .confirm-dialog .dialog-actions small { max-width:none; flex-basis:100%; } }

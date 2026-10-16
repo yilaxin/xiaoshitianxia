@@ -1,0 +1,13 @@
+.side-fav { border:1px solid transparent; border-radius:8px; width:100%; text-align:left; margin-top:0; transition:background-color .22s,color .22s,box-shadow .22s; }
+.side-fav:hover { background:#e9dfcf; color:#8e4a39; }
+.side-fav.active { background:#e6d5c5; color:#963f36; box-shadow:inset 3px 0 #963f36; font-weight:600; }
+.side-fav.active>svg,.side-fav.active [data-icon] svg { fill:#963f3614; }
+.favorites-note { display:flex; align-items:center; gap:24px; padding:28px 32px; margin-bottom:25px; border:1px solid #ddc5b3; border-radius:11px; background:radial-gradient(ellipse at 90% 100%,#d7b99536,transparent 65%),linear-gradient(115deg,#f0e1d4,#f3eade); box-shadow:0 5px 18px #7c483b06; }
+.favorites-heart { flex:0 0 62px; height:62px; display:grid; place-items:center; border:1px solid #c19b875c; border-radius:50%; color:#a16755; background:#fff9ee54; }
+.favorites-heart svg { width:29px; height:29px; fill:#a167550d; stroke-width:1.2; }
+.favorites-note .eyebrow { color:#a17e64; font-size:8px; letter-spacing:2px; }
+.favorites-note h2 { font:25px/1.65 var(--serif); letter-spacing:2px; color:#754b3b; margin:6px 0; }
+.favorites-note p { color:#a0876d; font-size:10px; line-height:1.9; letter-spacing:.5px; }
+.favorites-seal { margin-left:auto; flex-shrink:0; padding:9px 6px 9px 9px; color:#a46a56; border:1px solid #b97e656b; border-radius:6px 3px 6px 3px; font:16px/1.4 var(--serif); letter-spacing:3px; transform:rotate(4deg); }
+@media(max-width:1150px) { .favorites-note { padding:24px; gap:20px; }.favorites-note h2 { font-size:23px; }.favorites-heart { flex-basis:54px; height:54px; } }
+@media(max-width:680px) { .side-fav { display:none; }.favorites-note { padding:22px 18px; gap:14px; }.favorites-note h2 { font-size:19px; letter-spacing:1px; }.favorites-heart { flex-basis:41px; height:41px; }.favorites-heart svg { width:23px; height:23px; }.favorites-seal { display:none; }.favorites-note .eyebrow { font-size:7px; letter-spacing:1px; }.favorites-note p { font-size:9px; letter-spacing:0; } }

@@ -1,0 +1,12 @@
+.category-sort-help { font-size:10px; color:#9d805b; line-height:1.9; padding:0 2px 15px; }
+:is(#categoryRows,#tagRows) .category-sort-row { position:relative; padding:5px 6px; margin:0 -7px 4px; border:1px solid transparent; border-radius:8px; }
+.category-sort-handle { flex:0 0 27px; width:27px; height:34px; padding:4px; display:grid; place-items:center; color:#a58a65; border-radius:5px; cursor:grab; touch-action:none; }
+.category-sort-handle:hover { color:#805c36; background:#eae0ce; }
+.category-sort-handle:focus-visible { outline:2px solid #a27251; outline-offset:1px; background:#eee2cd; }
+.category-sort-handle svg { width:18px; height:23px; fill:currentColor; stroke:none; }
+:is(#categoryRows,#tagRows) .category-sort-dragging { z-index:4; border-color:#c1a27b; background:#f4e9d7; box-shadow:0 10px 24px #6243212b,0 2px 6px #62432118; }
+.category-sorting :is(#categoryRows,#tagRows) { user-select:none; }
+.category-sorting .category-sort-handle { cursor:grabbing; }
+.category-sort-dragging .category-sort-handle { background:#e5d3b5; color:#8b5438; }
+.sort-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+@media(max-width:680px) { .category-sort-help { font-size:9px; }.category-sort-handle { flex-basis:24px; width:24px; }:is(#categoryRows,#tagRows) .manage-item { gap:6px; } }

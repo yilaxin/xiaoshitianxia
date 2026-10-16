@@ -1,0 +1,67 @@
+name: Windows build and compatibility
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            arch: x64
+          - os: windows-11-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install -r requirements-build.txt
+      - name: Build application
+        run: npm run build
+      - name: Models and storage
+        shell: pwsh
+        run: |
+          npm test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:recipes-storage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:calendar-data
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:performance-storage
+          exit $LASTEXITCODE
+      - name: Native Electron resource and data compatibility
+        run: npm run test:resources
+      - name: Create Windows release archive
+        run: npm run release:windows -- --arch ${{ matrix.arch }}
+      - name: Verify release architecture and contents
+        run: node scripts/verify_release.cjs --arch ${{ matrix.arch }}
+      - name: Test packaged application resources
+        env:
+          XSTX_TEST_BUILD: outputs/windows/笑食天下-win32-${{ matrix.arch }}/resources/app.asar
+        run: npm run test:resources
+      - name: Upload tested archive
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: windows-${{ matrix.arch }}
+          path: outputs/release/*
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {extractFile,listPackage}=require('@electron/asar');
+const root=path.resolve(__dirname,'..'),metadata=require('../package.json'),at=process.argv.indexOf('--arch');
+const arch=at>=0?process.argv[at+1]:process.arch;
+assert.ok(['x64','arm64'].includes(arch));
+const program=path.join(root,'outputs/windows',metadata.productName+'-win32-'+arch);
+const exe=fs.readFileSync(path.join(program,'笑食天下.exe'));
+assert.equal(exe.readUInt16LE(0),0x5a4d);const offset=exe.readUInt32LE(0x3c);assert.equal(exe.readUInt32LE(offset),0x4550);
+assert.equal(exe.readUInt16LE(offset+4),arch==='x64'?0x8664:0xaa64,'Windows executable architecture');
+const asar=path.join(program,'resources/app.asar'),info=JSON.parse(extractFile(asar,'package.json').toString());
+assert.equal(info.version,metadata.version);assert.equal(info.main,'main.cjs');
+for(const key of ['main.cjs','preload.cjs','storage.cjs','photo-protocol.cjs','assets/logo.png','index.html'])assert.ok(extractFile(asar,key).length>0,key);
+assert.deepEqual(extractFile(asar,'assets/logo.png'),fs.readFileSync(path.join(root,'assets/logo.png')),'Original logo preserved');
+assert.ok(!listPackage(asar).some(p=>/菜单资料\.json|自动备份|运行缓存|node_modules/.test(p)),'No private library or development dependencies');
+for(const file of ['先读我.txt','APP-LICENSE.txt','LICENSE','LICENSES.chromium.html'])assert.ok(fs.statSync(path.join(program,file)).size>0,file);
+const name=`XiaoshiTianxia-${metadata.version}-windows-${arch}.zip`,zip=path.join(root,'outputs/release',name);
+(async()=>{const hash=crypto.createHash('sha256');for await(const chunk of fs.createReadStream(zip))hash.update(chunk);assert.ok(fs.readFileSync(path.join(root,'outputs/release/SHA256SUMS.txt'),'utf8').includes(hash.digest('hex')+'  '+name));console.log('PASS: Windows '+arch+' executable architecture, app version, asar resources, original logo, licenses, no personal data, SHA256');})().catch(e=>{console.error(e.message);process.exitCode=1});

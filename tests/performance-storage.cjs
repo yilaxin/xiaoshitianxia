@@ -1,0 +1,30 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {Storage}=require('../app/desktop/storage.cjs');
+const {resolvePhoto}=require('../app/desktop/photo-protocol.cjs');
+const root=fs.mkdtempSync(path.join(__dirname,'../work/performance-storage-')),store=new Storage(root);
+const src='data:image/jpeg;base64,'+fs.readFileSync(path.join(__dirname,'../assets/rice.jpg')).toString('base64');
+const data={version:1,categories:['主食'],dishes:[{id:'d1',name:'炒饭',category:'主食',tags:[],description:'',created:'2026-10-16',cover:src}],records:[{id:'r1',dishId:'d1',date:'2026-10-16',note:'',photos:[src]}],meals:[],bookIndex:0};
+const result=store.save(data);assert.match(result.state.dishes[0].cover,/^local:/);
+assert.equal(result.state.dishes[0].cover,result.state.records[0].photos[0]);
+const reference=store.loadReferences();assert.ok(JSON.stringify(reference).length<1000);assert.deepEqual(store.load(),data);
+const daily=path.join(store.backupDir,fs.readdirSync(store.backupDir)[0]);
+const before=fs.readFileSync(daily),decode=store.decodePhoto;
+store.decodePhoto=()=>{throw Error('Bookmark saves must not read image bytes');};
+for(let i=1;i<=5;i++){reference.bookIndex=i;reference.readingPositions={flavors:i};assert.equal(store.save(reference).backupWarning,null);}
+assert.deepEqual(fs.readFileSync(daily),before,'Reading positions do not rewrite a full photo backup');
+assert.equal(JSON.parse(fs.readFileSync(store.file,'utf8')).bookIndex,5,'Reading position still persists');
+store.decodePhoto=decode;
+reference.records[0].note='这一次的感受';store.save(reference);
+assert.equal(JSON.parse(fs.readFileSync(daily,'utf8')).data.records[0].note,'这一次的感受');
+const portable=path.join(root,'portable.json');store.writePortable(portable,reference);
+assert.deepEqual(JSON.parse(fs.readFileSync(portable,'utf8')),store.portable(reference));
+const withSeed=structuredClone(reference);withSeed.dishes[0].cover='dumplings';store.writePortable(portable,withSeed,{includeSeeds:true});
+const expanded=JSON.parse(fs.readFileSync(portable,'utf8'));assert.match(expanded.data.dishes[0].cover,/^data:image\/jpeg;base64,/);
+const old=fs.readFileSync(portable),missing=structuredClone(reference);missing.dishes[0].cover='local:'+'0'.repeat(64)+'.jpg';
+assert.throws(()=>store.writePortable(portable,missing));assert.deepEqual(fs.readFileSync(portable),old,'Failed streaming export preserves an existing target');
+assert.equal(fs.readdirSync(root).some(n=>n.endsWith('.tmp')),false);
+for(const date of ['2026-02-30','2025-02-29','2026-13-01']){const bad=structuredClone(reference);bad.records[0].date=date;assert.throws(()=>store.save(bad));}
+const assets=path.join(__dirname,'../assets');
+assert.equal(resolvePhoto('xstx-media://assets/rice.jpg',assets,store.photoDir),path.join(assets,'rice.jpg'));
+for(const url of ['file:///etc/passwd','xstx-media://assets/core.js','xstx-media://photos/../../menu.json','xstx-media://assets/%2e%2e%2fmenu.json','xstx-media://user:password@assets/rice.jpg','xstx-media://assets:123/rice.jpg','xstx-media://photos/not-a-hash.jpg'])assert.equal(resolvePhoto(url,assets,store.photoDir),null,url);
+console.log('PASS: compact photo references; no photo decoding/backup rewrite on reading saves; real edits refresh backups; complete streaming export/atomic failure; strict dates; fixed photo paths');

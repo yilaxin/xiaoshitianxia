@@ -1,0 +1,5 @@
+.photo-paste-actions { display:flex; align-items:center; gap:12px; margin:-7px 0 21px; flex-wrap:wrap; }
+.photo-paste-actions .btn { color:#8c4d3c; border-color:#c6ab8d; background:#eee1ce; }
+.photo-paste-actions .btn:hover { background:#e1cdb1; border-color:#a98661; }
+.photo-paste-status { color:#9b8263; font-size:10px; line-height:1.8; flex:1; min-width:160px; }
+.photo-paste-actions .btn svg { width:15px; height:15px; }

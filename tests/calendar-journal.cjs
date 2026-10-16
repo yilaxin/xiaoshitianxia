@@ -1,0 +1,33 @@
+const {app,BrowserWindow,dialog}=require('electron');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const project=path.resolve(__dirname,'..'),profile=fs.mkdtempSync(path.join(project,'work/calendar-journal-'));
+const images=path.join(project,'outputs/v'+require('../package.json').version);fs.mkdirSync(images,{recursive:true});
+const exportPath=path.join(profile,'随记完整备份.json');dialog.showSaveDialogSync=()=>exportPath;
+process.env.XSTX_HEADLESS_TEST='1';process.argv.push('--data-dir='+profile);require('../dist-app/main.cjs');
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+app.whenReady().then(async()=>{try{
+ const win=BrowserWindow.getAllWindows()[0],errors=[];win.webContents.on('console-message',e=>{if(/Uncaught|TypeError|ReferenceError/.test(e.message)){errors.push(e.message);console.error(e.message)}});
+ await new Promise((resolve,reject)=>{win.webContents.once('did-finish-load',resolve);win.webContents.once('did-fail-load',(_e,c,d)=>reject(Error(c+': '+d)))});
+ const run=async s=>{try{return await win.webContents.executeJavaScript(s,true)}catch(e){console.error('Failed script:',s.slice(0,400));throw e;}},click=s=>run(`document.querySelector(${JSON.stringify(s)}).click()`);
+ const capture=async name=>{await pause(300);await win.webContents.capturePage();fs.writeFileSync(path.join(images,name),(await win.webContents.capturePage()).toPNG())};
+ await run(`setView('calendar');year=2026;month=9;selectedDate='2026-10-16';render()`);const old=await run(`({dishes:state.dishes,records:state.records,meals:state.meals})`);
+ assert.equal(await run(`document.querySelector('[data-date="2026-10-01"] .day-work-badge').textContent`),'休');assert.equal(await run(`document.querySelector('[data-date="2026-10-10"] .day-work-badge').textContent`),'班');
+ await click('[data-date="2026-10-16"]');await click('[data-action="calendarWriteNote"]');
+ await run(`document.getElementById('dayNoteTitle').value='平凡的一天，也有小确幸';document.getElementById('dayNoteBody').value='今天在路上看到了很漂亮的晚霞。\\n想把这份心情留在这里，明天也好好生活。'`);await capture('日历随记-录入.png');await click('#dayNoteForm [type=submit]');
+ assert.equal(await run(`document.getElementById('dayNoteDialog').open`),false);assert.equal(await run(`state.dayNotes['2026-10-16'].title`),'平凡的一天，也有小确幸');assert.equal(await run(`document.querySelectorAll('[data-date="2026-10-16"] .day-note-mark').length`),1);
+ assert.match(await run(`document.querySelector('.day-journal-body').textContent`),/漂亮的晚霞/);assert.match(await run(`document.querySelector('.month-footnote').textContent`),/1 篇随记/);assert.deepEqual(await run(`({dishes:state.dishes,records:state.records,meals:state.meals})`),old);
+ await capture('日历随记-日历与感想.png');
+ await click('[data-action="calendarReadNote"]');assert.match(await run(`document.querySelector('.note-read-body').textContent`),/\n想把/);await click('[data-action="calendarEditReadNote"]');
+ await run(`document.getElementById('dayNoteBody').value+='\\n再记一笔。'`);await click('[data-action="calendarCloseNote"]');assert.equal(await run(`document.getElementById('dayNoteConfirmDialog').open`),true);await click('[data-action="calendarCancelConfirm"]');assert.match(await run(`document.getElementById('dayNoteBody').value`),/再记一笔/);await click('[data-action="calendarCloseNote"]');await click('[data-action="calendarConfirmNote"]');assert.doesNotMatch(await run(`state.dayNotes['2026-10-16'].body`),/再记一笔/);
+ // A different day gets its own note, including when there are meals on that day.
+ await click('[data-date="2026-10-15"]');await click('[data-action="calendarWriteNote"]');await run(`document.getElementById('dayNoteBody').value='和早餐的美味一起记下。 <script>bad()</script>'`);await click('#dayNoteForm [type=submit]');assert.equal(await run(`document.querySelector('.day-journal script')`),null);assert.ok(await run(`document.querySelectorAll('.day-meal').length`)>0);assert.equal(await run(`Object.keys(state.dayNotes).length`),2);
+ await click('[data-action="calendarWriteNote"]');await click('[data-action="calendarDeleteNote"]');await click('[data-action="calendarCancelConfirm"]');assert.equal(await run(`!!state.dayNotes['2026-10-15']`),true);await click('[data-action="calendarDeleteNote"]');await click('[data-action="calendarConfirmNote"]');assert.equal(await run(`!!state.dayNotes['2026-10-15']`),false);assert.deepEqual(await run('state.meals'),old.meals);await click('[data-action="calendarUndoNote"]');assert.equal(await run(`!!state.dayNotes['2026-10-15']`),true);
+ await run(`year=2026;month=1;selectedDate='2026-02-17';render()`);assert.equal(await run(`document.querySelector('[data-date="2026-02-17"] .day-lunar').textContent`),'春节');assert.equal(await run(`document.querySelector('[data-date="2026-02-14"] .day-work-badge').textContent`),'班');await capture('日历随记-春节假期.png');
+ await click('[data-action="calendarHolidayInfo"]');assert.match(await run(`document.getElementById('auxDialog').textContent`),/国办发明电〔2025〕7号/);await click('#auxDialog [data-action="close"]');
+ await run(`year=2027;month=9;selectedDate='2027-10-01';render()`);assert.equal(await run(`document.querySelector('[data-date="2027-10-01"] .day-work-badge')`),null);assert.match(await run(`document.querySelector('.holiday-coverage').textContent`),/暂未收录/);
+ await run(`year=2026;month=9;selectedDate='2026-10-16';render();exportBackup()`);const backup=JSON.parse(fs.readFileSync(exportPath,'utf8'));assert.deepEqual(backup.data.dayNotes,await run('state.dayNotes'));assert.equal(await run(`validBackup(${JSON.stringify(backup)})`),true);const bad=structuredClone(backup);bad.data.dayNotes['2026-02-30']=bad.data.dayNotes['2026-10-16'];assert.equal(await run(`validBackup(${JSON.stringify(bad)})`),false);
+ const reload=new Promise(r=>win.webContents.once('did-finish-load',r));win.webContents.reload();await reload;assert.deepEqual(await run('state.dayNotes'),backup.data.dayNotes);
+ await run(`setView('calendar');year=2026;month=9;selectedDate='2026-10-16';render()`);win.setContentSize(900,650);await pause(250);await capture('日历随记-小窗口.png');
+ const fit=await run(`(()=>{const c=document.querySelector('.calendar-box').getBoundingClientRect(),d=document.querySelector('[data-date="2026-10-16"]');return c.right<=innerWidth&&d.scrollHeight<=d.clientHeight+2})()`);assert.equal(fit,true,'Calendar and cell fit small supported window');
+ assert.deepEqual(errors,[]);console.log('PASS: official holiday/rest/work labels and coverage; standalone notes without food; same-day meal coexistence; edit/discard guard; safe text display; delete/cancel/undo; lunar festival; source explanation; full backup validation/export/reload; small-window layout');app.exit(0);
+}catch(e){console.error(e.stack||e);app.exit(1)}});

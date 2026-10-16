@@ -1,0 +1,52 @@
+{
+  "name": "xiaoshitianxia",
+  "productName": "笑食天下",
+  "version": "0.2.7",
+  "private": true,
+  "description": "笑食天下 · 私人美食菜单与用餐日历",
+  "author": "笑食天下",
+  "scripts": {
+    "build": "python scripts/build_desktop.py",
+    "start": "electron dist-app",
+    "test": "node tests/data-actions.cjs && node tests/storage.cjs",
+    "test:integration": "electron tests/integration.cjs",
+    "test:book": "electron tests/book-turn.cjs",
+    "test:photos": "electron tests/optional-photos.cjs",
+    "test:categories": "electron tests/category-sort.cjs",
+    "test:favorites": "electron tests/favorites.cjs",
+    "package": "node scripts/package_windows.cjs",
+    "test:tags": "electron tests/tag-sort.cjs",
+    "test:hero": "electron tests/hero-carousel.cjs",
+    "test:cover": "electron tests/cover-opening.cjs",
+    "test:paste": "electron tests/photo-paste.cjs",
+    "test:layout": "electron tests/book-layout.cjs",
+    "test:fullscreen": "electron tests/book-fullscreen.cjs",
+    "test:meal-photos": "electron tests/meal-photos.cjs",
+    "test:wheel": "electron tests/book-wheel.cjs",
+    "test:books": "electron tests/food-books.cjs",
+    "test:recipes-storage": "node tests/recipes-storage.cjs",
+    "test:calendar-data": "node tests/calendar-data.cjs",
+    "test:journal": "electron tests/calendar-journal.cjs",
+    "test:dish-image": "electron tests/dish-image.cjs",
+    "test:clipboard-native": "electron tests/clipboard-native.cjs",
+    "test:performance-storage": "node tests/performance-storage.cjs",
+    "test:resources": "electron tests/resource-lifecycle.cjs",
+    "test:all": "node tests/run-all.cjs",
+    "package:x64": "node scripts/package_windows.cjs --arch x64",
+    "package:arm64": "node scripts/package_windows.cjs --arch arm64",
+    "release:windows": "node scripts/release_windows.cjs"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yilaxin/xiaoshitianxia.git"
+  },
+  "homepage": "https://github.com/yilaxin/xiaoshitianxia",
+  "bugs": {
+    "url": "https://github.com/yilaxin/xiaoshitianxia/issues"
+  }
+}

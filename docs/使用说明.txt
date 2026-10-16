@@ -1,0 +1,29 @@
+笑食天下 · Windows 公开体验版
+
+一、选择版本
+普通 Intel / AMD 64 位电脑：下载 windows-x64.zip。
+骁龙 / Surface 等 Windows ARM 电脑：下载 windows-arm64.zip。
+支持 Windows 10 / Windows 11 的 64 位系统；推荐更新到系统最新补丁。
+不支持 Windows 7、Windows 8 / 8.1、32 位 Windows，也不提供 Windows S 模式商店包。
+
+二、开始使用
+1. 完整解压 ZIP 到一个普通文件夹。
+2. 双击文件夹里的「笑食天下.exe」。不要只复制 exe，也不要在压缩包内直接运行。
+3. 不需要安装 Node.js、Python、浏览器插件或登录账号。
+4. 首次打开附带示例内容，便于体验；可以按需要整理自己的收藏。
+
+三、资料与更新
+记录、照片和自动备份保存在 %APPDATA%\XiaoshiTianxia。
+可在「设置与备份」导出包含照片的完整备份，换电脑时再导入。
+更新前请保存正在编辑的内容、导出完整备份并退出旧版，然后将新版解压到新的文件夹运行。
+两个架构版本共用同一 Windows 用户的资料目录，不需要手动复制 JSON 或照片文件。
+应用只在本机保存资料，不会将你的菜品、照片或随记上传到 GitHub。
+
+四、下载来源与校验
+请从项目 GitHub Releases 下载：
+https://github.com/yilaxin/xiaoshitianxia/releases/latest
+SHA256SUMS.txt 提供校验值。当前程序未做商业代码签名，系统可能显示发布者未知；请确认下载来源和校验值，不要关闭系统安全功能。
+
+五、遇到问题
+请在 GitHub Issues 中说明：应用版本、Windows 版本、x64 / ARM64、复现步骤和错误提示。
+提交截图、日志或备份前请移除个人信息；不要公开上传整个个人资料库。

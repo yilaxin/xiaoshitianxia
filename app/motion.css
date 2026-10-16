@@ -1,0 +1,10 @@
+.nav button { transition:background-color .22s ease,color .22s ease,box-shadow .22s ease; }
+.day { transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease; }
+dialog[open] { animation:dialog-arrive .2s cubic-bezier(.2,.7,.2,1); }
+dialog[open]::backdrop { animation:backdrop-arrive .18s ease-out; }
+@keyframes dialog-arrive { from { opacity:0; transform:translateY(8px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes backdrop-arrive { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+  .nav button,.day { transition:none; }
+  dialog[open],dialog[open]::backdrop { animation:none; }
+}

@@ -1,0 +1,141 @@
+/* Text-only theme. Keep paper, gold ornament, branding and geometry intact. */
+:root {
+  --text-primary: #342B25;
+  --text-secondary: #665649;
+  --text-helper: #776A5B;
+  --text-accent: #A34136;
+  --text-on-photo: #ffffff;
+  --text-on-dark: #fffaf0;
+  --text-mask-rgb: 24, 19, 16;
+}
+
+body, input, textarea, select { color:var(--text-primary); }
+.page-head h1, .section-title, .card-line h3, .detail-summary h2,
+.history-title h3, .history-text h4, .dialog-head h2,
+.setting-card h2, .setting-row h3, .calendar-head h2, .day-panel h2,
+.day-meal-title, .day-journal h4, .recipe-editor-section h3,
+.chapter-heading h2, .book-right h2, .random-copy h2,
+.book-catalog-entry h3, .manage-item input, .breadcrumbs strong,
+.recipe-linked h3, .favorites-note h2 { color:var(--text-primary); }
+
+.nav button, .nav .book-subnav button, .side-fav {
+  color:var(--text-secondary); font-size:15px; font-weight:500;
+}
+.nav button:not(.active) { color:var(--text-secondary); }
+.nav button.active, .nav .book-subnav button.active, .side-fav.active {
+  color:var(--text-primary); font-weight:600;
+}
+.nav button.active>svg, .side-fav.active>svg { color:var(--text-accent); }
+.nav .count, .side-fav .count { color:var(--text-primary); font-size:14px!important; opacity:1; }
+.side-bottom { color:var(--text-secondary); font-size:14px; }
+
+.breadcrumbs, .search input, .page-head p, .head-meta,
+.section-title small, .section-controls button, .section-controls select,
+.chip, .chip .num, .photo-tag, .card-category, .card-description,
+.card-flavor-notes, .card-bottom, .card-bottom .times, .tag,
+.detail-meta, .history-title small, .history-date, .history-text p,
+.meal-detail-card small, .dialog-head p, .dialog-actions small,
+.field label, .field input, .field textarea, .field select,
+.form-tabs button, .upload strong, .upload p, .form-hint,
+.status-note, .notice, .photo-paste-status, .manage-item small,
+.category-sort-help, .pick, .inline-picks button,
+.setting-card>p, .setting-row p, .setting-facts, .setting-badge,
+.setting-cats button, .setting-cats button span, .prototype-tag,
+.random-copy p, .favorites-note p, .empty p, .empty .btn,
+.book-toolbar select, .book-info, .book-page, .book-nav .position,
+.book-tip, .book-fullscreen .book-tip, .book-catalog-entry small,
+.book-catalog-jumps button, .recipe-photo-tools small,
+.recipe-step>header, .chapter-meta, .chapter-photo figcaption,
+.book-section, .meal-photo-heading span, .meal-photo-help,
+.meal-dishes-hint, .meal-dishes-later, .meal-table-album header>span,
+.confirm-description, .delete-impact,
+.chapter-footer, .calendar-controls .holiday-help, .today-btn,
+.week-label, .month-footnote, .calendar-legend, .holiday-coverage,
+.day-panel .day-caption, .day-meal-top, .day-meal p,
+.day-holiday-info p, .day-journal-empty, .day-journal-footer,
+.note-save-hint, .holiday-list article, .holiday-source,
+.calendar-empty small, .no-photo-mark, .day-table-photo>span,
+.meal-table-grid button>span {
+  color:var(--text-secondary); font-size:14px;
+}
+.search input::placeholder, .field input::placeholder,
+.field textarea::placeholder, .recipe-step textarea::placeholder,
+.manage-item input::placeholder { color:var(--text-helper); }
+.card-bottom, .history-title small, .detail-meta,
+.chapter-photo figcaption, .chapter-footer, .status-note,
+.form-hint, .photo-paste-status, .note-save-hint {
+  color:var(--text-helper);
+}
+.detail-description, .book-intro, .chapter-flow, .day-journal-body,
+.note-read-body { color:var(--text-secondary); }
+.day-journal-body { font-size:15px; }
+.chapter-ingredient span:last-child { color:var(--text-secondary); }
+.history-date strong, .day-journal>header h3,
+.day-meals-heading, .holiday-list article strong,
+.meal-photo-heading h3, .meal-table-album h3 { color:var(--text-primary); }
+.head-meta strong { color:var(--text-secondary); }
+.hero p { color:var(--text-secondary); font-size:14px; }
+.hero h2 em { color:var(--text-accent); }
+.setting-row h3, .history-text h4, .hero .hero-cta,
+.toast .undo-button { font-size:14px; }
+.chip .num { opacity:1; }
+.chip.active .num { color:var(--text-on-dark); }
+
+.btn, .btn.small, .book-toolbar .btn, .day-panel .btn,
+.day-journal .btn, .new-meal-item .upload strong,
+.danger-action, .history-text .meal-link { font-size:14px; }
+.btn.outline, .btn.soft, .icon-btn, .form-tabs button.active,
+.btn.text, .hero .hero-cta, .history-text .meal-link,
+.inline-picks button.selected, .btn.danger-outline, .danger, .error,
+.danger-action, .field label i,
+.chapter-block h3, .day-holiday-info strong,
+.day .day-lunar.festival, .day .day-work-badge.rest,
+.calendar-legend .legend-rest { color:var(--text-accent); }
+.btn.outline, .btn.soft, .icon-btn { color:var(--text-secondary); }
+.btn:not(.primary):not(:disabled):hover, .chip:not(.active):hover,
+.section-controls button:hover, .section-controls select:hover,
+.setting-cats button:hover, .book-catalog-jumps button:hover,
+.inline-picks button:hover { color:var(--text-primary); }
+.btn.primary, .btn.primary:hover, .chip.active,
+.day.today .day-num { color:var(--text-on-dark); }
+.error { font-size:14px; }
+.history-actions .btn.text.small { color:var(--text-accent); font-size:14px!important; }
+.book-fullscreen-toggle { color:var(--text-secondary)!important; }
+.book-fullscreen-toggle:hover { color:var(--text-primary)!important; }
+.toast { color:var(--text-on-dark); font-size:14px; }
+
+/* Dense calendar cells retain compact labels without changing their layout. */
+.day { color:var(--text-primary); font-size:15px; }
+.day .day-lunar, .day .day-work-badge, .day .day-count,
+.day .day-note-mark { font-size:12px; color:var(--text-secondary); }
+.day .day-note-title { color:var(--text-secondary); font-size:14px; }
+.day .day-lunar.festival, .day .day-work-badge.rest { color:var(--text-accent); }
+.day .day-work-badge.work { color:var(--text-secondary); }
+.calendar-legend .legend-work { color:var(--text-secondary); }
+
+/* A local veil follows the caption; the rest of the photo stays untouched. */
+.hero-caption, .book-image-label { isolation:isolate; color:var(--text-on-photo); }
+.hero-caption small, .book-image-label { font-size:14px; }
+.hero-slide::after, .hero-image::after {
+  background:linear-gradient(180deg,transparent 38%,rgba(var(--text-mask-rgb),.76) 68%,rgba(var(--text-mask-rgb),.92));
+}
+.book-image-label::before {
+  content:''; position:absolute; inset:-12px -10px -10px; z-index:-1;
+  background:radial-gradient(ellipse,rgba(var(--text-mask-rgb),.94) 45%,rgba(var(--text-mask-rgb),.80) 70%,transparent);
+  pointer-events:none;
+}
+.chapter-hero-copy {
+  color:var(--text-on-photo);
+  background:linear-gradient(180deg,transparent,rgba(var(--text-mask-rgb),.80) 28%,rgba(var(--text-mask-rgb),.94));
+}
+.chapter-hero-copy h2 { color:var(--text-on-photo); }
+.chapter-hero-copy small, .chapter-hero-copy p { font-size:14px; }
+.chapter-hero.photo-pending .chapter-hero-copy,
+.chapter-hero.photo-pending .chapter-hero-copy h2 { color:var(--text-primary); }
+
+/* Gold English, folios, seals, cover lettering and separators keep their patina. */
+@media(max-width:680px) {
+  .nav>button { font-size:0; }
+  .nav .book-subnav button { font-size:15px; }
+  .topbar .btn.primary { font-size:14px; }
+}

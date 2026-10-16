@@ -1,0 +1,95 @@
+const {app,BrowserWindow,dialog}=require('electron');
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const project=path.resolve(__dirname,'..');
+const profile=fs.mkdtempSync(path.join(project,'work/optional-photos-'));
+const images=path.join(project,'outputs/v'+require('../package.json').version);
+fs.mkdirSync(images,{recursive:true});
+const exportFile=path.join(profile,'完整备份.json');
+dialog.showSaveDialogSync=()=>exportFile;
+process.env.XSTX_HEADLESS_TEST='1';
+process.argv.push('--data-dir='+profile);
+require('../dist-app/main.cjs');
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+app.whenReady().then(async()=>{
+ try{
+  const win=BrowserWindow.getAllWindows()[0];
+  await new Promise((resolve,reject)=>{win.webContents.once('did-finish-load',resolve);win.webContents.once('did-fail-load',(_e,code,desc)=>reject(Error(code+': '+desc)))});
+  const run=script=>win.webContents.executeJavaScript(script,true);
+  const ready=async predicate=>{for(let i=0;i<60;i++){if(await run(predicate))return;await pause(30)}throw Error('Timed out: '+predicate)};
+  const capture=async name=>{await pause(300);fs.writeFileSync(path.join(images,name),(await win.webContents.capturePage()).toPNG())};
+  const submit=()=>run(`document.getElementById('recordForm').requestSubmit()`);
+  const imageBase64=fs.readFileSync(path.join(project,'assets/rice.jpg')).toString('base64');
+  const upload=async()=>{
+   await run(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(imageBase64)}),c=>c.charCodeAt(0));const transfer=new DataTransfer();transfer.items.add(new File([bytes],'补图.jpg',{type:'image/jpeg'}));const input=document.getElementById('dishPhotos');input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}))})()`);
+   await ready('formDraft.photos.length>0');
+  };
+  await pause(500);
+  await run(`openForm();document.getElementById('dishName').value='清蒸鲈鱼';document.getElementById('dishCategory').value='荤菜';document.getElementById('dishTags').value='家常，清淡';document.getElementById('dishDescription').value='先记下喜欢的味道';document.getElementById('recordDate').value='2026-10-20';document.getElementById('recordNote').value='下次补一张照片'`);
+  assert.match(await run(`document.querySelector('#drop-dishPhotos strong').textContent`),/选填/);
+  await capture('照片选填-新增.png');
+  await submit();
+  assert.equal(await run(`document.getElementById('formDialog').open`),false);
+  const dishId=await run(`state.dishes.find(d=>d.name==='清蒸鲈鱼').id`);
+  const recordId=await run(`state.records.find(r=>r.dishId===${JSON.stringify(dishId)}).id`);
+  const dish=()=>run(`structuredClone(dishBy(${JSON.stringify(dishId)}))`);
+  assert.equal((await dish()).cover,'');
+  assert.equal((await dish()).description,'先记下喜欢的味道');
+  assert.deepEqual(await run(`state.records.find(r=>r.id===${JSON.stringify(recordId)}).photos`),[]);
+  assert.equal(await run(`document.querySelector('.food-card:has([data-id="${dishId}"]) img').getAttribute('src')===EMPTY_PHOTO`),true);
+  await run(`setView('calendar');selectedDate='2026-10-20';year=2026;month=9;render()`);
+  assert.equal(await run(`document.querySelector('[data-date="2026-10-20"] .no-photo-mark').textContent.trim()`),'1 道');
+  await capture('无图记录-日历.png');
+  await run(`openForm('meal',{date:'2026-10-21'});addMealDish();document.getElementById('mealTitle').value='轻松午饭';document.getElementById('mealPlace').value='家里';document.getElementById('mealNote').value='两道菜都先记文字';document.querySelector('[name="newName-'+formDraft.newMealDishes[0].id+'"]').value='番茄炒蛋';document.querySelector('[name="dishIds"][value="${dishId}"]').checked=true`);
+  await submit();assert.equal(await run(`document.getElementById('formDialog').open`),false);
+  const mealId=await run(`state.meals.find(m=>m.title==='轻松午饭').id`);
+  assert.equal(await run(`state.records.filter(r=>r.mealId==='${mealId}').length`),2);
+  assert.equal(await run(`state.records.filter(r=>r.mealId==='${mealId}').every(r=>r.photos.length===0)`),true);
+  await run(`openForm('dish',{dishId:'${dishId}',date:'2026-10-22'});document.getElementById('recordNote').value='又吃到了，也可以不拍照'`);
+  await submit();assert.equal(await run(`document.getElementById('formDialog').open`),false);
+
+  // Reopen from the actual JSON; no placeholder picture may be saved as user content.
+  const reloaded=new Promise(resolve=>win.webContents.once('did-finish-load',resolve));
+  win.webContents.reload();await reloaded;
+  assert.equal((await dish()).cover,'');
+  assert.equal(await run(`state.records.filter(r=>r.dishId==='${dishId}').every(r=>r.photos.length===0)`),true);
+  await run(`setView('book');bookCover=false;state.bookIndex=bookDishes().findIndex(d=>d.id==='${dishId}');render()`);
+  assert.equal(await run(`document.querySelector('#bookSpread>.book-left img').getAttribute('src')===EMPTY_PHOTO`),true);
+  await ready(`document.querySelector('#bookSpread>.book-left img').naturalWidth>0`);
+  await run(`void flipBook(1)`);await ready('!bookBusy');
+  assert.equal(await run(`document.querySelector('#bookSpread>.book-right h2').textContent`),'番茄炒蛋','Text-only dishes also work in the turning book');
+  await run(`setView('menu')`);
+  await run(`exportBackup()`);
+  const portable=JSON.parse(fs.readFileSync(exportFile,'utf8'));
+  assert.equal(portable.data.dishes.find(d=>d.id===dishId).cover,'');
+  assert.equal(await run(`validBackup(${JSON.stringify(portable)})`),true);
+  assert.equal(await run(`validBackup({app:'笑食天下',format:'prototype-1',data:seed()})`),true,'Older photo-based backups remain accepted');
+  const bad=structuredClone(portable);bad.data.records.find(r=>r.id===recordId).photos=['data:image/svg+xml,invalid'];
+  assert.equal(await run(`validBackup(${JSON.stringify(bad)})`),false,'Missing photos must not weaken image validation');
+  assert.equal(await run(`window.desktop.prepareRestore();restoreState(${JSON.stringify(portable.data)})`),true);
+  await run(`openForm('dish',{editId:'${dishId}'})`);
+  assert.equal(await run(`document.getElementById('dishPhotos').multiple`),false,'Cover upload chooses one photo');
+  await upload();await submit();
+  assert.match((await dish()).cover,/^local:[a-f0-9]{64}\.jpg$/);
+  assert.equal(await run(`state.records.filter(r=>r.dishId==='${dishId}').every(r=>r.photos.length===0)`),true,'A cover upload must not add or rewrite a tasting record');
+
+  await run(`openForm('dish',{recordId:'${recordId}'})`);await upload();await submit();
+  assert.equal(await run(`state.records.find(r=>r.id==='${recordId}').photos.length`),1);
+  assert.equal(await run(`state.records.find(r=>r.id==='${recordId}').note`),'下次补一张照片');
+  await run(`openForm('dish',{recordId:'${recordId}'});document.querySelector('[data-action="removeUpload"]').click();renderForm()`);
+  assert.equal(await run('formDraft.photos.length'),0,'Removing the last photo stays empty when the form rerenders');
+  await submit();assert.equal(await run(`state.records.find(r=>r.id==='${recordId}').photos.length`),0);
+
+  const secondId=await run(`state.dishes.find(d=>d.name==='番茄炒蛋').id`);
+  const secondRecord=await run(`state.records.find(r=>r.dishId==='${secondId}').id`);
+  await run(`openForm('dish',{recordId:'${secondRecord}'})`);await upload();await submit();
+  assert.match(await run(`dishBy('${secondId}').cover`),/^local:[a-f0-9]{64}\.jpg$/,'First tasting photo also fills a missing cover');
+  await run(`openDish('${secondId}')`);await capture('后续补图-详情.png');
+  const saved=JSON.parse(fs.readFileSync(path.join(profile,'菜单资料.json'),'utf8'));
+  assert.match(saved.dishes.find(d=>d.id===secondId).cover,/^local:/);
+  assert.equal(saved.records.find(r=>r.id===recordId).photos.length,0);
+  console.log('PASS: photo-optional dish, meal and repeat tasting; placeholder/calendar marker; disk reload; full backup export/restore; later cover and record uploads; last-photo removal; older backup compatibility');
+  app.exit(0);
+ }catch(error){console.error(error.stack||error);app.exit(1)}
+});

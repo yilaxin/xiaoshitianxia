@@ -1,0 +1,12 @@
+.hero-carousel { background:#e8dfcf; isolation:isolate; }
+.hero-carousel::after { display:none; }
+.hero-slide { position:absolute; inset:0; display:block; overflow:hidden; }
+.hero-slide img { display:block; position:absolute; inset:0; }
+.hero-slide::after { content:''; position:absolute; inset:0; background:linear-gradient(transparent 45%,#24160b91); pointer-events:none; }
+.hero-slide-incoming { z-index:1; }
+.hero-carousel .hero-caption { z-index:2; }
+.hero-carousel .hero-caption>span:first-child { min-width:0; }
+.hero-carousel .hero-caption b { display:block; max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.hero-carousel .hero-caption small { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.hero-carousel .round-arrow { flex-shrink:0; }
+@media(prefers-reduced-motion:reduce) { .hero-carousel img { transition:none; }.hero-carousel:hover img { transform:none; } }
