@@ -15,6 +15,9 @@ app.whenReady().then(async()=>{try{
  const ready=async s=>{for(let i=0;i<150;i++){if(await run(s))return;await pause(30)}throw Error('Timed out: '+s)};
  const capture=async name=>{await pause(250);await win.webContents.capturePage();fs.writeFileSync(path.join(images,name),(await win.webContents.capturePage()).toPNG())};
  await ready(`typeof FoodBooks!=='undefined'`);assert.deepEqual(errors,[]);
+ // Windows Server runners may disable OS animations. Exercise the animated path
+ // explicitly without changing the user's system accessibility preference.
+ win.webContents.debugger.attach('1.3');await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await pause(80);
  assert.equal(await run(`document.querySelectorAll('[data-book-kind]').length`),3);
  await click('[data-action="booksToggle"]');assert.equal(await run(`document.getElementById('bookSubnav').hidden`),true);await click('[data-action="booksToggle"]');
  await run(`FoodBooks.select('recipes')`);assert.equal(await run(`state.recipes[0].id`),'example-egg-fried-rice');
@@ -24,6 +27,7 @@ app.whenReady().then(async()=>{try{
  await pause(650);await capture('独家食谱-内置示例.png');
  await click('[data-action="deleteRecipe"]');await click('[data-action="confirmRecipeDelete"]');
  const exampleReload=new Promise(r=>win.webContents.once('did-finish-load',r));win.webContents.reload();await exampleReload;await ready(`typeof FoodBooks!=='undefined'`);
+ await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await pause(80);
  assert.equal(await run('state.recipes.length'),0,'A deleted example does not reappear on restart');
  await run(`FoodBooks.select('recipes')`);assert.match(await run(`document.getElementById('main').textContent`),/你的独家食谱/);
  await run(`openForm()`);assert.equal(await run(`!!document.querySelector('[data-action="newRecipeFromForm"]')`),true);await click('[data-action="newRecipeFromForm"]');
