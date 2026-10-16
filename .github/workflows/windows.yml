@@ -49,6 +49,8 @@ jobs:
           exit $LASTEXITCODE
       - name: Native Electron resource and data compatibility
         run: npm run test:resources
+      - name: Recipe example and editor compatibility
+        run: npm run test:books
       - name: Create Windows release archive
         run: npm run release:windows -- --arch ${{ matrix.arch }}
       - name: Verify release architecture and contents

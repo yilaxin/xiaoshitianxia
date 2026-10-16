@@ -19,7 +19,7 @@ app.whenReady().then(async()=>{try{
  }
  await run(`FoodBooks.openRecipe();document.getElementById('recipeDialog').close();FoodBooks.openRecipe();document.getElementById('recipeName').value='快速重开后的食谱'`);await wait(50);
  await run(`document.querySelector('#recipeForm').requestSubmit()`);await wait(80);
- assert.equal(await run('state.recipes[0].name'),'快速重开后的食谱','A late close event cannot discard a reopened editor draft');
+ assert.equal(await run(`state.recipes.find(r=>r.name==='快速重开后的食谱')?.name`),'快速重开后的食谱','A late close event cannot discard a reopened editor draft');
  await run(`setView('menu');openForm();document.getElementById('formDialog').close();openForm();document.getElementById('dishName').value='快速重开后的美味'`);await wait(50);
  assert.equal(await run('formDraft!==null'),true);assert.equal(await run(`document.getElementById('dishName').value`),'快速重开后的美味');await run(`document.getElementById('formDialog').close()`);await wait(30);
  const panorama=await run(`(async()=>{const c=document.createElement('canvas');c.width=5000;c.height=1;const blob=await new Promise(r=>c.toBlob(r,'image/png'));const [data]=await filesToPhotos([new File([blob],'panorama.png',{type:'image/png'})]);const photo=new Image();photo.src=data;await photo.decode();return {w:photo.naturalWidth,h:photo.naturalHeight};})()`);

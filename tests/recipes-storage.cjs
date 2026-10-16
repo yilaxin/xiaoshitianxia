@@ -11,3 +11,10 @@ const optional=structuredClone(state);optional.recipes[0].cover='';optional.reci
 const orphan=structuredClone(optional);orphan.recipes[0].dishId='deleted-dish';store.save(orphan);assert.deepEqual(store.load(),orphan,'A deleted linked dish must not destroy the independent recipe');
 const target=new Storage(fs.mkdtempSync(path.join(__dirname,'../work/recipes-restore-')));target.save(store.portable(JSON.parse(fs.readFileSync(store.file,'utf8'))).data);assert.deepEqual(target.load(),orphan);
 console.log('PASS: old data compatibility; recipe cover/step image roundtrip/dedup; portable backup and restore; optional fields; deleted dish link; invalid structures/photos rejected atomically');
+const {withExample,validateRecipes}=require('../app/desktop/recipe-model.cjs');
+const migrated=withExample(state);assert.equal(state.recipes.length,1,'Example upgrade must not mutate existing data');assert.deepEqual(migrated.recipes[0],state.recipes[0]);assert.deepEqual(migrated.dishes,state.dishes);
+assert.equal(migrated.recipes.length,2);assert.ok(validateRecipes(migrated));assert.equal(withExample(migrated),migrated,'Repeated load does not duplicate example or clone the library');
+const example=migrated.recipes[1];assert.equal(example.ingredients.length,9);assert.equal(example.steps.length,6);assert.equal(example.cover,'rice');
+migrated.recipes.pop();assert.equal(withExample(migrated).recipes.length,1,'User deletion remains deleted');
+const blank=withExample(legacy);assert.equal(blank.recipes.length,1);store.save(blank);const restored=store.portable(JSON.parse(fs.readFileSync(store.file,'utf8'))).data;assert.equal(restored.recipeExampleVersion,1);assert.equal(withExample(restored).recipes.length,1,'Upgrade marker survives backup and restore');
+console.log('PASS: first-run/legacy example upgrade; existing recipes untouched; complete sample; idempotent reload; deletion persists; backup marker retained');

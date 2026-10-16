@@ -1,5 +1,7 @@
 (function(){
  'use strict';
+ // Install this example once per library; a saved deletion must remain a deletion.
+ if(!desktopReadOnly){const withExample=RecipeModel.withExample(state);if(withExample!==state)commit(withExample);}
  const books={flavors:{nav:'翻阅美味',title:'山珍海味',en:'THE FLAVORS YOU LOVE',unit:'道美味'},recipes:{nav:'翻阅食谱',title:'独家食谱',en:'RECIPES FROM YOUR KITCHEN',unit:'份食谱'},feasts:{nav:'翻阅盛宴',title:'欢聚一堂',en:'GATHER AROUND THE TABLE',unit:'顿好饭'}};
  let kind='flavors',expanded=true,cache=null,memories={flavors:{index:state.readingPositions?.flavors??state.bookIndex??0,cover:true,category:'全部'}};
  const baseList=bookDishes,baseRenderBook=renderBook,baseRender=render,baseSave=save,baseSetView=setView,baseCatalog=catalog,baseRenderForm=renderForm,baseOpenDish=openDish,baseValidBackup=validBackup;

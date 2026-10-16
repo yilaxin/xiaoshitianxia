@@ -17,6 +17,14 @@ app.whenReady().then(async()=>{try{
  await ready(`typeof FoodBooks!=='undefined'`);assert.deepEqual(errors,[]);
  assert.equal(await run(`document.querySelectorAll('[data-book-kind]').length`),3);
  await click('[data-action="booksToggle"]');assert.equal(await run(`document.getElementById('bookSubnav').hidden`),true);await click('[data-action="booksToggle"]');
+ await run(`FoodBooks.select('recipes')`);assert.equal(await run(`state.recipes[0].id`),'example-egg-fried-rice');
+ await run(`bookCover=false;render()`);assert.match(await run(`document.getElementById('main').textContent`),/家常蛋炒饭 · 示例/);
+ assert.equal(await run(`state.recipes[0].steps.length`),6);assert.equal(await run(`state.recipes[0].ingredients.length`),9);
+ const exampleText=await run(`FoodBooks.pages.flatMap(p=>[p.left,p.right]).flatMap(s=>s.blocks||[]).map(b=>b.text||b.name||'').join('\\n')`);assert.match(exampleText,/炒鸡蛋/);assert.match(exampleText,/我的下次改进/);
+ await capture('独家食谱-内置示例.png');
+ await click('[data-action="deleteRecipe"]');await click('[data-action="confirmRecipeDelete"]');
+ const exampleReload=new Promise(r=>win.webContents.once('did-finish-load',r));win.webContents.reload();await exampleReload;await ready(`typeof FoodBooks!=='undefined'`);
+ assert.equal(await run('state.recipes.length'),0,'A deleted example does not reappear on restart');
  await run(`FoodBooks.select('recipes')`);assert.match(await run(`document.getElementById('main').textContent`),/你的独家食谱/);
  await run(`openForm()`);assert.equal(await run(`!!document.querySelector('[data-action="newRecipeFromForm"]')`),true);await click('[data-action="newRecipeFromForm"]');
  await run(`document.getElementById('recipeName').value='妈妈的番茄炒蛋';document.getElementById('recipeServings').value='2 人份';document.getElementById('recipeDuration').value='15 分钟';document.getElementById('recipeDescription').value='家里最熟悉的味道。';document.querySelector('[data-field=name]').value='鸡蛋';document.querySelector('[data-field=amount]').value='3 个';document.querySelector('[data-step-text]').value='打散鸡蛋，加少许盐。';document.getElementById('recipeTips').value='鸡蛋炒到刚刚凝固，口感会更嫩。'`);
