@@ -21,7 +21,7 @@ app.whenReady().then(async()=>{try{
  await run(`bookCover=false;render()`);assert.match(await run(`document.getElementById('main').textContent`),/家常蛋炒饭 · 示例/);
  assert.equal(await run(`state.recipes[0].steps.length`),6);assert.equal(await run(`state.recipes[0].ingredients.length`),9);
  const exampleText=await run(`FoodBooks.pages.flatMap(p=>[p.left,p.right]).flatMap(s=>s.blocks||[]).map(b=>b.text||b.name||'').join('\\n')`);assert.match(exampleText,/炒鸡蛋/);assert.match(exampleText,/我的下次改进/);
- await capture('独家食谱-内置示例.png');
+ await pause(650);await capture('独家食谱-内置示例.png');
  await click('[data-action="deleteRecipe"]');await click('[data-action="confirmRecipeDelete"]');
  const exampleReload=new Promise(r=>win.webContents.once('did-finish-load',r));win.webContents.reload();await exampleReload;await ready(`typeof FoodBooks!=='undefined'`);
  assert.equal(await run('state.recipes.length'),0,'A deleted example does not reappear on restart');
