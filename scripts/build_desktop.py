@@ -82,6 +82,8 @@ readability_css=(root/'app/readability.css').read_text(encoding='utf-8')
 s=s.replace('</head>','<style id="readability-styles">\n'+readability_css+'\n</style>\n</head>',1)
 lifecycle_js=(root/'app/resource-lifecycle.js').read_text(encoding='utf-8')
 s=s.replace('</body>','<script>\n'+lifecycle_js+'\n</script>\n</body>',1)
+pdf_js=(root/'app/book-pdf.js').read_text(encoding='utf-8')
+s=s.replace('</body>','<script>\n'+pdf_js+'\n</script>\n</body>',1)
 (out/'index.html').write_text(s,encoding='utf-8')
 build_icon(root/'assets/logo.png', out)
 for p in (root/'app/desktop').glob('*.cjs'):

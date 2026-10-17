@@ -1,0 +1,2 @@
+# Development/CI only; users of the Windows app do not need Python.
+pypdf==6.10.0

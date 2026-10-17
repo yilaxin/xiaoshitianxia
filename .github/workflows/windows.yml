@@ -33,7 +33,7 @@ jobs:
         run: |
           npm ci
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pip install -r requirements-build.txt
+          python -m pip install -r requirements-build.txt -r requirements-test.txt
       - name: Build application
         run: npm run build
       - name: Models and storage
@@ -51,14 +51,19 @@ jobs:
         run: npm run test:resources
       - name: Recipe example and editor compatibility
         run: npm run test:books
+      - name: Native complete-book PDF export
+        run: npm run test:pdf
       - name: Create Windows release archive
         run: npm run release:windows -- --arch ${{ matrix.arch }}
       - name: Verify release architecture and contents
         run: node scripts/verify_release.cjs --arch ${{ matrix.arch }}
-      - name: Test packaged application resources
+      - name: Test packaged application resources and PDF export
         env:
           XSTX_TEST_BUILD: outputs/windows/笑食天下-win32-${{ matrix.arch }}/resources/app.asar
-        run: npm run test:resources
+        run: |
+          npm run test:resources
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:pdf
       - name: Upload tested archive
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:

@@ -10,7 +10,7 @@ assert.equal(exe.readUInt16LE(0),0x5a4d);const offset=exe.readUInt32LE(0x3c);ass
 assert.equal(exe.readUInt16LE(offset+4),arch==='x64'?0x8664:0xaa64,'Windows executable architecture');
 const asar=path.join(program,'resources/app.asar'),info=JSON.parse(extractFile(asar,'package.json').toString());
 assert.equal(info.version,metadata.version);assert.equal(info.main,'main.cjs');
-for(const key of ['main.cjs','preload.cjs','storage.cjs','photo-protocol.cjs','assets/logo.png','index.html'])assert.ok(extractFile(asar,key).length>0,key);
+for(const key of ['main.cjs','preload.cjs','storage.cjs','photo-protocol.cjs','book-pdf.cjs','assets/logo.png','index.html'])assert.ok(extractFile(asar,key).length>0,key);
 assert.deepEqual(extractFile(asar,'assets/logo.png'),fs.readFileSync(path.join(root,'assets/logo.png')),'Original logo preserved');
 assert.ok(!listPackage(asar).some(p=>/菜单资料\.json|自动备份|运行缓存|node_modules/.test(p)),'No private library or development dependencies');
 for(const file of ['先读我.txt','APP-LICENSE.txt','LICENSE','LICENSES.chromium.html'])assert.ok(fs.statSync(path.join(program,file)).size>0,file);

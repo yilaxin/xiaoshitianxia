@@ -1,7 +1,7 @@
 {
   "name": "xiaoshitianxia",
   "productName": "笑食天下",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "private": true,
   "description": "笑食天下 · 私人美食菜单与用餐日历",
   "author": "笑食天下",
@@ -31,6 +31,7 @@
     "test:clipboard-native": "electron tests/clipboard-native.cjs",
     "test:performance-storage": "node tests/performance-storage.cjs",
     "test:resources": "electron tests/resource-lifecycle.cjs",
+    "test:pdf": "electron tests/book-pdf.cjs",
     "test:all": "node tests/run-all.cjs",
     "package:x64": "node scripts/package_windows.cjs --arch x64",
     "package:arm64": "node scripts/package_windows.cjs --arch arm64",

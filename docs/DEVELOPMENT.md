@@ -15,11 +15,13 @@
 
 ## 测试
 
-`npm run test:all` 顺序执行全部回归。剪贴板测试结束后会恢复原剪贴板，建议在不同时操作剪贴板的测试环境中运行。
+先运行 `python -m pip install -r requirements-test.txt` 安装测试依赖，再使用 `npm run test:all` 顺序执行全部回归。剪贴板测试结束后会恢复原剪贴板，建议在不同时操作剪贴板的测试环境中运行。
+
+`npm run test:pdf` 会通过真实原生接口生成三种美食之书，检查筛选范围、中文可搜索文字、图片、长内容分页、取消、重复点击、失败覆盖保护和隐藏窗口释放。文件仅在隔离测试目录与 outputs 中生成，不读取私人资料。也可将 `XSTX_TEST_PYTHON` 指向已安装 pypdf 的 Python。
 
 GitHub Actions 在原生 x64 和 ARM64 Runner 执行存储、模型与真实 Electron 资源检查，再生成对应发行包。完整桌面交互可另在本机运行，未在 CI 执行的桌面操作不宣称为全部系统实机验证。
 
-可设置 `XSTX_TEST_BUILD` 为打包程序内 `resources/app.asar` 的相对路径，再运行 `npm run test:resources` 检查打包后的资源；测试仍使用隔离目录。
+可设置 `XSTX_TEST_BUILD` 为打包程序内 `resources/app.asar` 的相对路径，再运行 `npm run test:resources` 或 `npm run test:pdf` 检查打包后的资源与 PDF 导出；测试仍使用隔离目录。
 
 ## 发行
 

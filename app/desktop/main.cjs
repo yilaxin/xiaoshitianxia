@@ -2,6 +2,7 @@
 const {app,BrowserWindow,ipcMain,dialog,shell,Menu,protocol,net}=require('electron');
 const {registerPhotos}=require('./photo-protocol.cjs');
 const {readClipboardImage,copyImage}=require('./clipboard-images.cjs');
+const {createBookPdfExporter}=require('./book-pdf.cjs');
 const path=require('node:path');
 const {Storage,validate}=require('./storage.cjs');
 app.setName('笑食天下');
@@ -28,6 +29,8 @@ else{
   win.on('leave-full-screen',()=>win.webContents.send('window:fullscreenChanged',false));
   handleAsync('photo:clipboard',readClipboardImage);
   handleAsync('image:copy',copyImage);
+  const exportBookPdf=createBookPdfExporter({BrowserWindow,dialog,loadState:()=>storage.loadReferences()});
+  handleAsync('book:exportPdf',scope=>exportBookPdf(win,scope));
   handle('data:load',()=>storage.loadReferences());
   handle('data:save',data=>storage.save(data));
   handle('data:metadata',()=>storage.metadata());
