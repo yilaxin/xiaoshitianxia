@@ -8,6 +8,8 @@ const suites=[
  {name:'normal',file:'startup.cjs',args:[]},
  {name:'reduced',file:'startup.cjs',args:['--reduced']},
  {name:'click-and-home-transition',file:'startup-interaction.cjs',args:[]},
+ {name:'cold-first-frame-completion',file:'startup-finish.cjs',args:[]},
+ {name:'cover-and-margin-design',file:'startup-design.cjs',args:[]},
  {name:'escape-skip',file:'startup-edge.cjs',args:['--escape']},
  {name:'button-skip',file:'startup-edge.cjs',args:['--button']},
  {name:'waiting-escape',file:'startup-edge.cjs',args:['--hang-escape'],env:{XSTX_STARTUP_TEST_HANG:'1'}},

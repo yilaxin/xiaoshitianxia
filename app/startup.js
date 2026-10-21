@@ -23,7 +23,7 @@
   let watchdog = 0;
   let prepWatchdog = 0;
   let animations = [];
-  let timers = [];
+  let frame = 0;
   let bound = false;
   let previousOverflow = { html: '', body: '' };
   let cancelLogoWait = null;
@@ -32,8 +32,7 @@
   if (intro) intro.setAttribute('data-phase', phase);
 
   function clearTimers() {
-    timers.forEach(clearTimeout);
-    timers = [];
+    if (frame) { cancelAnimationFrame(frame); frame = 0; }
     if (watchdog) { clearTimeout(watchdog); watchdog = 0; }
     if (prepWatchdog) { clearTimeout(prepWatchdog); prepWatchdog = 0; }
   }
@@ -46,7 +45,40 @@
   }
 
   function addAnimation(animation) {
-    if (animation) animations.push(animation);
+    if (animation) {
+      animation.pause();
+      animations.push(animation);
+    }
+    return animation;
+  }
+
+  function playTimeline(last, reduced) {
+    // Begin every effect on one rendered frame, then use that animation's
+    // clock for stages and completion. Wall-clock timers can otherwise remove
+    // the overlay before a delayed first composition has finished fading it.
+    frame = requestAnimationFrame(() => {
+      if (cleanupDone) return;
+      const origin = document.timeline.currentTime;
+      for (const animation of animations) {
+        animation.play();
+        animation.startTime = origin;
+      }
+      let scrollRestored = reduced;
+      const update = () => {
+        if (cleanupDone) return;
+        const elapsed = Number(last.currentTime) || 0;
+        if (!reduced) {
+          const next = elapsed < 80 ? 'arriving' : elapsed < 1300 ? 'opening' : elapsed < 1800 ? 'settling' : 'revealing';
+          if (phase !== next) setPhase(next);
+          if (!scrollRestored && elapsed >= 1700) { restoreScroll(); scrollRestored = true; }
+        }
+        frame = requestAnimationFrame(update);
+      };
+      update();
+      last.finished.then(() => cleanup()).catch(() => {
+        if (!cleanupDone) skip('animation-interrupted');
+      });
+    });
   }
 
   function setPhase(next) {
@@ -263,13 +295,15 @@
     setPhase('revealing');
     addAnimation(intro.animate([{ opacity: 1 }, { opacity: 0 }],
       { duration: 200, easing: 'ease-out', fill: 'both' }));
-    addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
+    return addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
       { duration: 200, easing: 'ease-out', fill: 'both' }));
-    timers.push(setTimeout(() => cleanup(), 220));
   }
 
   function runFull() {
     setPhase('arriving');
+    const ambience = document.querySelector('.startup-ambience');
+    if (ambience) addAnimation(ambience.animate([{ opacity: 1 }, { opacity: 0 }],
+      { duration: 450, easing: 'ease-in-out', fill: 'both' }));
 
     const closedShift = book ? book.offsetWidth / 4 : 0;
     // The stationary cover and its hinge share one easing and timeline.
@@ -312,11 +346,11 @@
       { left: (rect.left + closedShift) + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '6px 14px 14px 6px' },
       { left: '0px', top: '0px', width: innerWidth + 'px', height: innerHeight + 'px', borderRadius: '0px' }
     ], { duration: 350, delay: 1450, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' }));
-    for (const element of [book, shadow, skipBtn]) {
+    for (const element of [book, shadow]) {
       if (element) addAnimation(element.animate([{ opacity: 1 }, { opacity: 0 }],
         { duration: 350, delay: 1450, easing: 'ease-in-out', fill: 'both' }));
     }
-    addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
+    const reveal = addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
       { duration: 800, delay: 1800, easing: 'ease-in-out', fill: 'both' }));
 
     addAnimation(intro ? intro.animate([
@@ -324,13 +358,7 @@
       { opacity: 0 }
     ], { duration: 800, delay: 1800, easing: 'ease-in-out', fill: 'both' }) : null);
 
-    timers.push(setTimeout(() => setPhase('opening'), 80));
-    timers.push(setTimeout(() => setPhase('settling'), 1300));
-    // Restore the real scrollbar under opaque paper, before the home is
-    // visible. Unlocking only at cleanup would resize the visible grid.
-    timers.push(setTimeout(() => restoreScroll(), 1700));
-    timers.push(setTimeout(() => setPhase('revealing'), 1800));
-    timers.push(setTimeout(() => cleanup(), DURATION));
+    return reveal;
   }
 
   function start() {
@@ -338,8 +366,8 @@
     started = true;
     openBtn.disabled = true;
     openBtn.setAttribute('aria-label', '正在翻开笑食天下');
-    if (reduceMotion.matches) runReduced();
-    else runFull();
+    const reduced = reduceMotion.matches;
+    playTimeline(reduced ? runReduced() : runFull(), reduced);
     watchdog = setTimeout(() => skip('watchdog'), 5000);
     return true;
   }
