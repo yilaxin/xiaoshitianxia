@@ -11,6 +11,12 @@ const dataArg=process.argv.find(v=>v.startsWith('--data-dir='));
 const dataRoot=dataArg?path.resolve(dataArg.slice(11)):path.join(app.getPath('appData'),'XiaoshiTianxia');
 app.setPath('userData',path.join(dataRoot,'运行缓存'));
 let win,storage;
+const headless=process.env.XSTX_HEADLESS_TEST==='1';
+const startupTest=process.env.XSTX_STARTUP_TEST==='1';
+const startupEnabled=!headless||startupTest;
+const startupHang=process.env.XSTX_STARTUP_TEST_HANG==='1';
+const startupSession={enabled:startupEnabled,ready:false,displayed:false,played:false,pending:null,value:null,claimed:false};
+function beginStartup(){if(!startupSession.enabled||!startupSession.ready||!startupSession.displayed||startupSession.played)return;startupSession.played=true;startupSession.value={startedAt:Date.now(),enabled:true};if(startupSession.pending){const resolve=startupSession.pending;startupSession.pending=null;resolve(startupSession.value);}}
 const hasLock=app.requestSingleInstanceLock();
 if(!hasLock)app.quit();
 else{
@@ -27,6 +33,9 @@ else{
   handle('window:bookFullscreen',enabled=>{if(typeof enabled!=='boolean')throw Error('全屏状态不正确。');win.setFullScreen(enabled);return win.isFullScreen()});
   win.on('enter-full-screen',()=>win.webContents.send('window:fullscreenChanged',true));
   win.on('leave-full-screen',()=>win.webContents.send('window:fullscreenChanged',false));
+  handle('startup:mode',()=>({enabled:startupSession.enabled&&!startupSession.claimed}));
+  handle('startup:claim',()=>{const first=!startupSession.claimed;startupSession.claimed=true;return {first,enabled:startupSession.enabled};});
+  handleAsync('startup:ready',()=>{if(startupHang)return new Promise(()=>{});startupSession.claimed=true;if(!startupSession.enabled||startupSession.ready)return {startedAt:0,enabled:false};startupSession.ready=true;if(startupSession.displayed){beginStartup();return startupSession.value;}return new Promise(resolve=>{startupSession.pending=resolve;});});
   handleAsync('photo:clipboard',readClipboardImage);
   handleAsync('image:copy',copyImage);
   const exportBookPdf=createBookPdfExporter({BrowserWindow,dialog,loadState:()=>storage.loadReferences()});
@@ -44,7 +53,8 @@ else{
   win.webContents.session.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
   win.webContents.session.setPermissionCheckHandler(()=>false);
   win.webContents.on('render-process-gone',()=>dialog.showErrorBox('笑食天下','页面暂时停止运行，请关闭并重新打开。已保存的资料仍在本机。'));
-  win.once('ready-to-show',()=>{if(process.env.XSTX_HEADLESS_TEST!=='1'){win.show();win.focus()}});
+  win.once('ready-to-show',()=>{if(!headless){win.show();win.focus();startupSession.displayed=true;beginStartup();}});
+  if(headless&&startupTest){win.webContents.once('did-finish-load',()=>{setTimeout(()=>{startupSession.displayed=true;beginStartup();},120);});}
   win.on('closed',()=>{win=null});
   win.loadFile(path.join(__dirname,'index.html'));
  });

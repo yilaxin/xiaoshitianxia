@@ -7,8 +7,45 @@
 <style>
 __BASE_CSS__
 </style>
+<style>
+__STARTUP_CSS__
+</style>
 </head>
 <body>
+<div id="startupIntro" class="startup-intro" data-phase="arriving" aria-hidden="true">
+ <div class="startup-stage">
+  <div class="startup-shadow" aria-hidden="true"></div>
+  <div class="startup-book" role="img" aria-label="笑食天下启动翻书动画">
+   <div class="startup-spine" aria-hidden="true"></div>
+   <div class="startup-page">
+    <div class="startup-page-inner">
+     <span class="startup-page-kicker">MY PRIVATE FOOD JOURNAL</span>
+     <p class="startup-page-line1">把喜欢的味道，好好收藏。</p>
+     <p class="startup-page-line2">把寻常的日子，慢慢记下。</p>
+    </div>
+    <div class="startup-page-shadow" aria-hidden="true"></div>
+   </div>
+   <div class="startup-cover">
+    <div class="startup-cover-front">
+     <span class="startup-logo"><img data-startup-logo alt="笑食天下 Logo" src="__STARTUP_LOGO__"></span>
+     <h1>笑食天下</h1>
+     <p>私人美食手记</p>
+     <small>A TASTE OF YOUR LIFE</small>
+     <span class="startup-cover-shade" aria-hidden="true"></span>
+    </div>
+    <div class="startup-cover-back">
+     <span class="startup-back-mark">笑食天下</span>
+     <span class="startup-cover-shade" aria-hidden="true"></span>
+    </div>
+   </div>
+  </div>
+ </div>
+ <button class="startup-skip" type="button" data-action="skipStartup" aria-label="跳过启动动画">跳过</button>
+</div>
+<script>
+(function(){try{var m=window.desktop&&window.desktop.startup&&window.desktop.startup.mode&&window.desktop.startup.mode();if(m&&m.enabled===false){var el=document.getElementById("startupIntro");if(el)el.remove();}}catch(e){}})();
+</script>
+
 <div class="app">
  <aside class="sidebar">
   <a class="brand" href="#menu" aria-label="笑食天下首页"><span class="logo-art"><img data-brand-logo alt="笑食天下 Logo"></span><span class="brand-sub">A TASTE OF YOUR LIFE</span></a>

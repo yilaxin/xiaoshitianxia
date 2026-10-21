@@ -21,6 +21,7 @@
 
 ## 可以做什么
 
+- **启动翻书动画**：冷启动从酒红封面自然翻入「我的菜单」，可在设置中关闭；减少动态效果时使用约 200ms 淡入。
 - **我的菜单**：收藏菜品，管理分类标签，搜索、筛选、排序、标记特别喜欢；照片可以以后再补。
 - **用餐记录**：记录日期、感受、地点和制作者，保存单道菜及整桌饭局的照片。
 - **三本美食之书**：山珍海味收藏美味，独家食谱记录食材做法，欢聚一堂回味一顿饭；支持翻书动画、目录和全屏。
@@ -48,6 +49,8 @@ npm start
 
 ```powershell
 npm run test:all
+npm run test:startup
+npm run test:startup-independent
 npm run release:windows
 # 或只构建一个架构
 npm run release:windows -- --arch x64

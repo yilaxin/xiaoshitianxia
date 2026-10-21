@@ -12,6 +12,22 @@ app.whenReady().then(async()=>{
   await new Promise((resolve,reject)=>{win.webContents.once('did-finish-load',resolve);win.webContents.once('did-fail-load',(_e,c,d)=>reject(Error(c+': '+d)))});
   const run=s=>win.webContents.executeJavaScript(s,true);
   const ready=async s=>{for(let i=0;i<100;i++){if(await run(s))return;await pause(40)}throw Error('Timed out: '+s)};
+  // isFullScreen() changes before Windows delivers its final viewport resize.
+  // Starting the interruption test in that gap correctly cancels the turn via
+  // the resize handler instead of leaving paper for Escape to interrupt.
+  const settledViewport=async()=>{
+   let previous='',stable=0;
+   for(let i=0;i<100;i++){
+    const native=win.getContentBounds();
+    const viewport=await run(`new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({width:innerWidth,height:innerHeight}))))`);
+    const key=JSON.stringify({native,viewport});
+    const matches=Math.abs(native.width-viewport.width)<=1&&Math.abs(native.height-viewport.height)<=1;
+    stable=matches&&key===previous?stable+1:0;previous=key;
+    if(stable>=3)return;
+    await pause(20);
+   }
+   throw Error('Native fullscreen bounds and renderer viewport did not settle');
+  };
   const click=selector=>run(`document.querySelector(${JSON.stringify(selector)}).click()`);
   const key=async keyCode=>{win.webContents.sendInputEvent({type:'keyDown',keyCode});win.webContents.sendInputEvent({type:'keyUp',keyCode});await pause(70)};
   const isFull=()=>run(`window.desktop.isFullscreen()&&document.body.classList.contains('book-fullscreen')`);
@@ -59,6 +75,7 @@ app.whenReady().then(async()=>{
   // At the smallest supported window, controls still remain on screen.
   win.setContentSize(900,650);await pause(100);await run(`setView('book');bookCover=false;render()`);
   await click('[data-action="bookFullscreen"]');await ready(`window.desktop.isFullscreen()`);await fit();
+  await settledViewport();
   await run(`void flipBook(1)`);await ready(`!!document.querySelector('.paper-leaf')`);
   await key('Escape');await normal();await ready('!bookBusy');
   assert.equal(await run(`document.querySelectorAll('.paper-leaf').length`),0,'Exit during a turn settles the selected page');

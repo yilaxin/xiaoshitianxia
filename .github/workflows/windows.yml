@@ -49,10 +49,19 @@ jobs:
           exit $LASTEXITCODE
       - name: Native Electron resource and data compatibility
         run: npm run test:resources
+      - name: Startup book animation compatibility
+        run: npm run test:startup
+      - name: Native fullscreen and scroll recovery
+        run: |
+          npm run test:fullscreen
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:wheel
       - name: Recipe example and editor compatibility
         run: npm run test:books
       - name: Native complete-book PDF export
         run: npm run test:pdf
+      - name: Independent startup animation contract
+        run: npm run test:startup-independent
       - name: Create Windows release archive
         run: npm run release:windows -- --arch ${{ matrix.arch }}
       - name: Verify release architecture and contents
@@ -64,6 +73,8 @@ jobs:
           npm run test:resources
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run test:pdf
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run test:startup
       - name: Upload tested archive
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:

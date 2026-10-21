@@ -156,6 +156,26 @@
     baseRender();
   };
   window.addEventListener('resize', () => { if (activeTurn) finishTurn(activeTurn, true); });
+  // Chromium can keep a wheel gesture latched to the replaced text sheet after
+  // a turn. At either edge, hand the same input straight to the document so
+  // users do not have to move the pointer or wait for that latch to expire.
+  document.addEventListener('wheel', event => {
+    if (view !== 'book' || event.ctrlKey || event.defaultPrevented || !event.cancelable ||
+        document.body.classList.contains('book-fullscreen') || !event.deltaY ||
+        Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+    const sheet = event.target instanceof Element && event.target.closest('#bookSpread > .book-right');
+    if (!sheet) return;
+    const down = event.deltaY > 0;
+    const atEdge = down ? sheet.scrollTop + sheet.clientHeight >= sheet.scrollHeight - 1 : sheet.scrollTop <= 1;
+    const documentScroll = document.scrollingElement;
+    if (!atEdge || !documentScroll || (down
+      ? documentScroll.scrollTop + innerHeight >= documentScroll.scrollHeight - 1
+      : documentScroll.scrollTop <= 0)) return;
+    const unit = event.deltaMode === 1 ? parseFloat(getComputedStyle(sheet).lineHeight) || 20
+      : event.deltaMode === 2 ? innerHeight : 1;
+    event.preventDefault();
+    window.scrollBy({ top: event.deltaY * unit, behavior: 'instant' });
+  }, { passive: false });
   reducedMotion.addEventListener('change', () => {
     if (reducedMotion.matches && activeTurn) finishTurn(activeTurn, true);
   });

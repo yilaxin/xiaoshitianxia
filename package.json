@@ -1,7 +1,7 @@
 {
   "name": "xiaoshitianxia",
   "productName": "笑食天下",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "private": true,
   "description": "笑食天下 · 私人美食菜单与用餐日历",
   "author": "笑食天下",
@@ -10,6 +10,7 @@
     "start": "electron dist-app",
     "test": "node tests/data-actions.cjs && node tests/storage.cjs",
     "test:integration": "electron tests/integration.cjs",
+    "test:startup": "node tests/run-startup.cjs",
     "test:book": "electron tests/book-turn.cjs",
     "test:photos": "electron tests/optional-photos.cjs",
     "test:categories": "electron tests/category-sort.cjs",
@@ -35,7 +36,8 @@
     "test:all": "node tests/run-all.cjs",
     "package:x64": "node scripts/package_windows.cjs --arch x64",
     "package:arm64": "node scripts/package_windows.cjs --arch arm64",
-    "release:windows": "node scripts/release_windows.cjs"
+    "release:windows": "node scripts/release_windows.cjs",
+    "test:startup-independent": "node tests/run-startup-independent.cjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",
