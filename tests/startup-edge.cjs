@@ -32,6 +32,8 @@ app.whenReady().then(async()=>{
   const waitFor=async(predicate,timeout)=>{const start=Date.now();while(Date.now()-start<timeout){if(await run(predicate))return true;await wait(20)}return false};
 
   if(mode==='--escape'||mode==='--button'){
+   await ready('StartupIntro.phase === "waiting"');
+   await run(`document.querySelector('[data-action="openStartup"]').click()`);
    await ready('StartupIntro.active===true && !!document.getElementById("startupIntro")');
    const start=Date.now();
    if(mode==='--escape'){
@@ -74,10 +76,13 @@ app.whenReady().then(async()=>{
    let found=false;
    for(let i=0;i<200;i++){
     const info=await run(`(()=>{const c=document.querySelector('.startup-cover');if(!c)return null;const r=c.getBoundingClientRect();return {phase:StartupIntro.phase,active:StartupIntro.active,center:r.left+r.width/2,innerWidth:window.innerWidth};})()`);
-    if(info&&info.active&&info.phase==='arriving'){
+    if(info&&info.active&&info.phase==='waiting'){
      await wait(180);
      const c=await run(`(()=>{const r=document.querySelector('.startup-cover').getBoundingClientRect();return {center:r.left+r.width/2,innerWidth:window.innerWidth};})()`);
      assert.ok(Math.abs(c.center-c.innerWidth/2)<4,'900x650 合上书封面应视觉居中，center='+c.center+' innerCenter='+(c.innerWidth/2));
+     const fit=await run(`(()=>{const cover=document.querySelector('[data-action="openStartup"]').getBoundingClientRect(),hint=document.querySelector('.startup-open-hint').getBoundingClientRect(),logo=document.querySelector('.startup-logo').getBoundingClientRect();return {bottom:cover.bottom,hintBottom:hint.bottom,logoRatio:logo.width/logo.height,height:innerHeight};})()`);
+     assert.ok(fit.hintBottom<fit.bottom&&fit.bottom<fit.height,'小窗口点击提示与封面必须完整显示');
+     assert.ok(Math.abs(fit.logoRatio-1)<.02,'小窗口 Logo 不得受挤压变形');
      found=true;
      break;
     }
@@ -87,6 +92,7 @@ app.whenReady().then(async()=>{
    const sc=await run(`(()=>{const html=document.documentElement;return {htmlOverflow:getComputedStyle(html).overflow,bodyOverflow:getComputedStyle(document.body).overflow,htmlStyle:html.style.overflow,bodyStyle:document.body.style.overflow};})()`);
    assert.ok(sc.htmlStyle==='hidden'||sc.htmlOverflow==='hidden','启动期间 html 不得出现滚动条');
    assert.ok(sc.bodyStyle==='hidden'||sc.bodyOverflow==='hidden','启动期间 body 不得出现滚动条');
+   await run(`document.querySelector('[data-action="openStartup"]').click()`);
    assert.equal(await waitFor(`StartupIntro.phase==='done' && !document.getElementById('startupIntro')`,3500),true,'900x650 正常动画必须完成');
    assert.equal(await run(`StartupIntro.active`),false);
    console.log('PASS: startup-edge --small (900x650 center, no scrollbar, full completion)');

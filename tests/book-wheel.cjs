@@ -9,14 +9,15 @@ app.whenReady().then(async()=>{
  try{
   const win=BrowserWindow.getAllWindows()[0];
   await new Promise((resolve,reject)=>{win.webContents.once('did-finish-load',resolve);win.webContents.once('did-fail-load',(_e,c,d)=>reject(Error(c+': '+d)))});
+  win.webContents.debugger.attach('1.3');
   const run=s=>win.webContents.executeJavaScript(s,true);
   const ready=async s=>{for(let i=0;i<100;i++){if(await run(s))return;await pause(20)}throw Error('Timed out: '+s)};
   const wheel=async(selector,deltaY)=>{
    const point=await run(`(()=>{const r=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect();return {x:Math.round(r.x+r.width*.6),y:Math.round(Math.max(0,r.y)+Math.min(r.height,innerHeight-Math.max(0,r.y))*.45)}})()`);
-   win.webContents.sendInputEvent({type:'mouseMove',...point});
-   // The offscreen compositor must acknowledge the new pointer target after an
-   // outer scroll; sending both events in one turn can hit the previous target.
-   await pause(40);
+   // Wait for the renderer to acknowledge the new hit target. A fixed 40ms
+   // delay can race the offscreen compositor after the outer page scrolls.
+   // The wheel itself still goes through Electron's native input path.
+   await win.webContents.debugger.sendCommand('Input.dispatchMouseEvent',{type:'mouseMoved',...point});
    win.webContents.sendInputEvent({type:'mouseWheel',...point,deltaX:0,deltaY});
    await pause(160);
   };

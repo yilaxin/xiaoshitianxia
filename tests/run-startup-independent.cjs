@@ -1,4 +1,4 @@
-// Codex integration entry: original independent author tests remain unchanged.
+// Startup contract runner; v0.3.1 adapts prior contracts to click-to-open.
 'use strict';
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {spawnSync}=require('node:child_process');

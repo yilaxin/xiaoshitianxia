@@ -9,6 +9,8 @@
   let cover = document.querySelector('.startup-cover');
   let page = document.querySelector('.startup-page');
   let skipBtn = document.querySelector('[data-action="skipStartup"]');
+  let openBtn = document.querySelector('[data-action="openStartup"]');
+  let bridge = document.querySelector('.startup-paper-bridge');
   let logo = document.querySelector('[data-startup-logo]');
   let shadow = document.querySelector('.startup-shadow');
   let pageShadow = document.querySelector('.startup-page-shadow');
@@ -18,7 +20,6 @@
   let started = false;
   let finished = false;
   let cleanupDone = false;
-  let startedAt = 0;
   let watchdog = 0;
   let prepWatchdog = 0;
   let animations = [];
@@ -26,6 +27,7 @@
   let bound = false;
   let previousOverflow = { html: '', body: '' };
   let cancelLogoWait = null;
+  let previousFocus = null;
 
   if (intro) intro.setAttribute('data-phase', phase);
 
@@ -55,9 +57,16 @@
   function unlock() {
     document.documentElement.classList.remove('startup-active');
     if (app) app.inert = false;
+    restoreScroll();
+  }
+
+  function restoreScroll() {
+    document.documentElement.classList.remove('startup-scroll-locked');
     document.documentElement.style.overflow = previousOverflow.html || '';
     document.body.style.overflow = previousOverflow.body || '';
   }
+
+  function blockScroll(event) { event.preventDefault(); }
 
   function removeListeners() {
     document.removeEventListener('keydown', onKeydown, true);
@@ -65,6 +74,11 @@
     if (reduceMotion.removeEventListener) reduceMotion.removeEventListener('change', onReducedChange);
     else if (reduceMotion.removeListener) reduceMotion.removeListener(onReducedChange);
     if (skipBtn) skipBtn.removeEventListener('click', onSkipClick);
+    if (openBtn) openBtn.removeEventListener('click', onOpenClick);
+    if (intro) {
+      intro.removeEventListener('wheel', blockScroll);
+      intro.removeEventListener('touchmove', blockScroll);
+    }
   }
 
   function cleanup() {
@@ -82,13 +96,22 @@
     }
     removeListeners();
     unlock();
+    const restoreFocus = intro && intro.contains(document.activeElement);
     const element = document.getElementById('startupIntro');
     if (element) element.remove();
+    if (restoreFocus) {
+      const target = previousFocus && previousFocus.isConnected && previousFocus !== document.body
+        ? previousFocus : document.querySelector('.nav [data-view="menu"]');
+      if (target) target.focus({ preventScroll: true });
+    }
     intro = null;
     book = null;
     cover = null;
     page = null;
     skipBtn = null;
+    openBtn = null;
+    bridge = null;
+    previousFocus = null;
     logo = null;
     shadow = null;
     pageShadow = null;
@@ -100,21 +123,35 @@
       event.preventDefault();
       skip('escape');
     }
+    if (event.key === 'Tab' && active) {
+      const targets = [openBtn, skipBtn].filter(el => el && !el.disabled);
+      const index = targets.indexOf(document.activeElement);
+      if (targets.length) {
+        event.preventDefault();
+        targets[(index + (event.shiftKey ? -1 : 1) + targets.length) % targets.length].focus();
+      }
+    }
   }
 
   function onResize() {
-    // CSS clamps adapt the spread; the animation keeps its own timeline.
-    if (book) book.getBoundingClientRect();
+    // A waiting cover responds through CSS. An in-flight viewport expansion
+    // cannot retain its old geometry after resizing; safely reveal the home.
+    if (started && active) skip('resize');
   }
 
   function onReducedChange() {
-    if (reduceMotion.matches && active && !cleanupDone) skip('reduced-motion');
+    if (reduceMotion.matches && started && active && !cleanupDone) skip('reduced-motion');
   }
 
   function onSkipClick(event) {
     if (event) event.preventDefault();
     if (finished || cleanupDone) return;
     skip('button');
+  }
+
+  function onOpenClick(event) {
+    if (event) event.preventDefault();
+    start();
   }
 
   function bindListeners() {
@@ -125,6 +162,9 @@
     if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', onReducedChange);
     else if (reduceMotion.addListener) reduceMotion.addListener(onReducedChange);
     if (skipBtn) skipBtn.addEventListener('click', onSkipClick);
+    if (openBtn) openBtn.addEventListener('click', onOpenClick);
+    intro.addEventListener('wheel', blockScroll, { passive: false });
+    intro.addEventListener('touchmove', blockScroll, { passive: false });
   }
 
   function assetLogo() {
@@ -214,14 +254,12 @@
   }
 
   function runReduced() {
-    setPhase('arriving');
-    const closedShift = book ? book.offsetWidth / 4 : 0;
-    const from = 'translateX(' + (-closedShift * .985).toFixed(2) + 'px) scale(.985)';
-    const to = 'translateX(' + (-closedShift).toFixed(2) + 'px) scale(1)';
-    addAnimation(book ? book.animate([
-      { opacity: 0, transform: from },
-      { opacity: 1, transform: to }
-    ], { duration: 200, easing: 'ease-out', fill: 'both' }) : null);
+    restoreScroll();
+    setPhase('revealing');
+    addAnimation(intro.animate([{ opacity: 1 }, { opacity: 0 }],
+      { duration: 200, easing: 'ease-out', fill: 'both' }));
+    addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
+      { duration: 200, easing: 'ease-out', fill: 'both' }));
     timers.push(setTimeout(() => cleanup(), 220));
   }
 
@@ -229,71 +267,97 @@
     setPhase('arriving');
 
     const closedShift = book ? book.offsetWidth / 4 : 0;
-    addAnimation(book ? book.animate([
-      { opacity: 0 },
-      { opacity: 1 }
-    ], { duration: 250, easing: 'ease-out', fill: 'both' }) : null);
-
-    // The closed cover stays centered during arrival; shift the spread only
-    // when the hinge starts turning, with the same timeline and easing.
+    // The stationary cover and its hinge share one easing and timeline.
     addAnimation(book ? book.animate([
       { transform: 'translateX(' + (-closedShift).toFixed(2) + 'px)' },
       { transform: 'translateX(0px)' }
-    ], { duration: 1250, delay: 250, easing: 'cubic-bezier(.5,.05,.75,.45)', fill: 'both' }) : null);
+    ], { duration: 1220, delay: 80, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' }) : null);
 
     addAnimation(cover ? cover.animate([
       { transform: 'rotateY(0deg)' },
       { transform: 'rotateY(-180deg)' }
-    ], { duration: 1250, delay: 250, easing: 'cubic-bezier(.5,.05,.75,.45)', fill: 'both' }) : null);
+    ], { duration: 1220, delay: 80, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' }) : null);
 
     addAnimation(page ? page.animate([
-      { opacity: .72, transform: 'perspective(1200px) rotateY(2deg) translateY(10px)' },
+      { opacity: .85, transform: 'perspective(1200px) rotateY(2deg) translateY(5px)' },
       { opacity: 1, transform: 'perspective(1200px) rotateY(0deg) translateY(0)' }
-    ], { duration: 400, delay: 1500, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both' }) : null);
+    ], { duration: 350, delay: 1000, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'both' }) : null);
 
     addAnimation(pageShadow ? pageShadow.animate([
       { opacity: .22 },
       { opacity: .08 }
-    ], { duration: 400, delay: 1500, easing: 'ease-out', fill: 'both' }) : null);
+    ], { duration: 350, delay: 1000, easing: 'ease-out', fill: 'both' }) : null);
 
     addAnimation(shadow ? shadow.animate([
       { opacity: .26, transform: 'translate(-50%,-50%) scale(.9)' },
       { opacity: .5, transform: 'translate(-50%,-50%) scale(1.04)' }
-    ], { duration: 1250, delay: 250, easing: 'cubic-bezier(.5,.05,.75,.45)', fill: 'both' }) : null);
+    ], { duration: 1220, delay: 80, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' }) : null);
+
+    // Expand the opened paper into the same textured paper as the home.
+    // The home stays fully rendered in place: no render(), zoom or relayout.
+    const rect = page.getBoundingClientRect();
+    Object.assign(bridge.style, {
+      left: (rect.left + closedShift) + 'px', top: rect.top + 'px',
+      width: rect.width + 'px', height: rect.height + 'px'
+    });
+    addAnimation(bridge.animate([
+      { opacity: 0, offset: 0 }, { opacity: 1, offset: .2 }, { opacity: 1 }
+    ], { duration: 350, delay: 1450, fill: 'both' }));
+    addAnimation(bridge.animate([
+      { left: (rect.left + closedShift) + 'px', top: rect.top + 'px', width: rect.width + 'px', height: rect.height + 'px', borderRadius: '6px 14px 14px 6px' },
+      { left: '0px', top: '0px', width: innerWidth + 'px', height: innerHeight + 'px', borderRadius: '0px' }
+    ], { duration: 350, delay: 1450, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' }));
+    for (const element of [book, shadow, skipBtn]) {
+      if (element) addAnimation(element.animate([{ opacity: 1 }, { opacity: 0 }],
+        { duration: 350, delay: 1450, easing: 'ease-in-out', fill: 'both' }));
+    }
+    addAnimation(app.animate([{ opacity: 0 }, { opacity: 1 }],
+      { duration: 800, delay: 1800, easing: 'ease-in-out', fill: 'both' }));
 
     addAnimation(intro ? intro.animate([
       { opacity: 1 },
       { opacity: 0 }
-    ], { duration: 700, delay: 1900, easing: 'ease', fill: 'both' }) : null);
+    ], { duration: 800, delay: 1800, easing: 'ease-in-out', fill: 'both' }) : null);
 
-    timers.push(setTimeout(() => setPhase('opening'), 250));
-    timers.push(setTimeout(() => setPhase('settling'), 1500));
-    timers.push(setTimeout(() => setPhase('revealing'), 1900));
+    timers.push(setTimeout(() => setPhase('opening'), 80));
+    timers.push(setTimeout(() => setPhase('settling'), 1300));
+    // Restore the real scrollbar under opaque paper, before the home is
+    // visible. Unlocking only at cleanup would resize the visible grid.
+    timers.push(setTimeout(() => restoreScroll(), 1700));
+    timers.push(setTimeout(() => setPhase('revealing'), 1800));
     timers.push(setTimeout(() => cleanup(), DURATION));
   }
 
   function start() {
-    if (started || finished || cleanupDone) return false;
-    if (!document.getElementById('startupIntro')) return false;
+    if (started || finished || cleanupDone || phase !== 'waiting') return false;
     started = true;
+    openBtn.disabled = true;
+    openBtn.setAttribute('aria-label', '正在翻开笑食天下');
+    if (reduceMotion.matches) runReduced();
+    else runFull();
+    watchdog = setTimeout(() => skip('watchdog'), 5000);
+    return true;
+  }
+
+  function prepare() {
+    if (finished || cleanupDone) return;
     active = true;
-    startedAt = performance.now();
+    setPhase('waiting');
     if (prepWatchdog) { clearTimeout(prepWatchdog); prepWatchdog = 0; }
     previousOverflow = {
       html: document.documentElement.style.overflow || '',
       body: document.body.style.overflow || ''
     };
-    document.documentElement.classList.add('startup-active');
+    document.documentElement.classList.add('startup-active', 'startup-scroll-locked');
+    previousFocus = document.activeElement;
     if (app) app.inert = true;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     intro.setAttribute('aria-hidden', 'false');
     intro.classList.add('is-ready');
     bindListeners();
-    if (reduceMotion.matches) runReduced();
-    else runFull();
-    watchdog = setTimeout(() => skip('watchdog'), 5000);
-    return true;
+    openBtn.focus({ preventScroll: true });
+    // No timeout while intentionally waiting for the user to open the cover.
   }
 
   function skip(reason) {
@@ -340,7 +404,7 @@
     if (!enabledByPreference) { removeOverlayImmediately(); return; }
 
     Promise.all([waitForLogo(), waitForShown()])
-      .then(() => start())
+      .then(() => prepare())
       .catch(() => removeOverlayImmediately());
   }
 

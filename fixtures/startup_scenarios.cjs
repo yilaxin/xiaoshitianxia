@@ -377,6 +377,18 @@ async function main() {
     await waitLoad(win);
     const fn = scenarios[scenario];
     if (!fn) throw Error('unknown scenario: ' + scenario);
+    // v0.3.1 deliberately waits for the user. These existing contracts now
+    // exercise the animation after the same explicit cover click as the UI.
+    if (['auto','skip','esc','reduce_initial','reduce_runtime','reload','restore'].includes(scenario)) {
+      const waiting = await waitUntil(win, `globalThis.StartupIntro?.phase === 'waiting'`, 5000);
+      chk('waits_for_cover_click', waiting);
+      if (!waiting) throw Error('Cover was not ready for user input');
+      await run(win, `document.querySelector('[data-action="openStartup"]').click()`);
+    }
+    if (['pref_toggle','pref_fail','bootstrap_pref_off'].includes(scenario)) {
+      await waitUntil(win, `!!globalThis.StartupIntro`, 5000);
+      await run(win, `StartupIntro.skip('settings-contract')`);
+    }
     await fn(win);
     finish(0);
   } catch (e) {

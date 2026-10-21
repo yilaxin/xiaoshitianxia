@@ -31,6 +31,8 @@ app.whenReady().then(async()=>{
   assert.equal(info.startupPref,true,'新进程应保留已开启偏好');
   assert.equal(info.bookIndex,2,'新进程阅读位置保留');
   assert.equal(info.note,'reload-state-marker','新进程记录保留');
+  assert.equal(info.phase,'waiting','新进程必须等待点击');
+  await run(`document.querySelector('[data-action="openStartup"]').click()`);
   assert.equal(await waitFor('StartupIntro.phase==="done" && !document.getElementById("startupIntro")',4000),true,'新进程动画应完整结束并移除遮罩');
   assert.equal(await run(`StartupIntro.active`),false);
   win.webContents.debugger.detach();

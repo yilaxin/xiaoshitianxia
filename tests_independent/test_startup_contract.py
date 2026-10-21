@@ -210,8 +210,8 @@ class StartupContractTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(pkg_path), "package.json missing")
         with open(pkg_path, encoding="utf-8") as fh:
             pkg = json.loads(fh.read())
-        self.assertEqual(pkg.get("version"), "0.3.0",
-                         "contract requires version bump to 0.3.0")
+        self.assertEqual(pkg.get("version"), "0.3.1",
+                         "click-to-open update requires version 0.3.1")
 
         startup_css = os.path.join(PROJECT_DIR, "app", "startup.css")
         startup_js = os.path.join(PROJECT_DIR, "app", "startup.js")
@@ -253,7 +253,7 @@ class StartupContractTests(unittest.TestCase):
     def test_dom_structure(self):
         _assert_scenario(self, "dom", _fresh_profile())
 
-    def test_auto_animation_phases_and_cleanup(self):
+    def test_clicked_animation_phases_and_cleanup(self):
         _assert_scenario(self, "auto", _fresh_profile())
 
     def test_skip_button_idempotent_and_no_replay(self):

@@ -24,6 +24,9 @@ app.whenReady().then(async()=>{
   const run=s=>win.webContents.executeJavaScript(s,true);
   const ready=async predicate=>{for(let i=0;i<150;i++){if(await run(predicate))return;await wait(20)}throw Error('Timed out: '+predicate)};
   await ready('!!window.StartupIntro');
+  await ready('StartupIntro.phase === "waiting"');
+  assert.equal(await run(`getComputedStyle(document.querySelector('.startup-page')).visibility`),'hidden','等待点击时只有封面');
+  await run(`document.querySelector('[data-action="openStartup"]').click()`);
   const observed=await run(`(async()=>{
     const samples=[];const start=performance.now();
     while(performance.now()-start<3600){

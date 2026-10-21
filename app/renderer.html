@@ -12,27 +12,28 @@ __STARTUP_CSS__
 </style>
 </head>
 <body>
-<div id="startupIntro" class="startup-intro" data-phase="arriving" aria-hidden="true">
+<div id="startupIntro" class="startup-intro" data-phase="idle" role="dialog" aria-modal="true" aria-labelledby="startupTitle" aria-hidden="true">
  <div class="startup-stage">
   <div class="startup-shadow" aria-hidden="true"></div>
-  <div class="startup-book" role="img" aria-label="笑食天下启动翻书动画">
+  <div class="startup-book">
    <div class="startup-spine" aria-hidden="true"></div>
    <div class="startup-page">
     <div class="startup-page-inner">
      <span class="startup-page-kicker">MY PRIVATE FOOD JOURNAL</span>
-     <p class="startup-page-line1">把喜欢的味道，好好收藏。</p>
-     <p class="startup-page-line2">把寻常的日子，慢慢记下。</p>
+     <p class="startup-page-line1">把喜欢的味道，<br>好好收藏。</p>
+     <p class="startup-page-line2">把寻常的日子，<br>慢慢记下。</p>
     </div>
     <div class="startup-page-shadow" aria-hidden="true"></div>
    </div>
    <div class="startup-cover">
-    <div class="startup-cover-front">
+    <button class="startup-cover-front" type="button" data-action="openStartup" aria-label="翻开笑食天下，进入我的菜单">
      <span class="startup-logo"><img data-startup-logo alt="笑食天下 Logo" src="__STARTUP_LOGO__"></span>
-     <h1>笑食天下</h1>
+     <span class="startup-title" id="startupTitle">笑食天下</span>
      <p>私人美食手记</p>
      <small>A TASTE OF YOUR LIFE</small>
+     <span class="startup-open-hint">点击封面 · 翻开美好 <span aria-hidden="true">→</span></span>
      <span class="startup-cover-shade" aria-hidden="true"></span>
-    </div>
+    </button>
     <div class="startup-cover-back">
      <span class="startup-back-mark">笑食天下</span>
      <span class="startup-cover-shade" aria-hidden="true"></span>
@@ -40,6 +41,7 @@ __STARTUP_CSS__
    </div>
   </div>
  </div>
+ <div class="startup-paper-bridge" aria-hidden="true"></div>
  <button class="startup-skip" type="button" data-action="skipStartup" aria-label="跳过启动动画">跳过</button>
 </div>
 <script>
