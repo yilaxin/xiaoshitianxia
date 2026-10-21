@@ -216,7 +216,12 @@
       img.addEventListener('load', onLoad);
       img.addEventListener('error', onError);
       if (typeof img.decode === 'function') {
-        img.decode().then(onLoad).catch(onError);
+        img.decode().then(onLoad).catch(() => {
+          // decode() can reject during a renderer/media change even though
+          // the image request is still valid. Trust load/error for pending
+          // requests; the preparation watchdog still bounds a stalled load.
+          if (img.complete && img.naturalWidth > 0) onLoad();
+        });
       }
     });
   }
