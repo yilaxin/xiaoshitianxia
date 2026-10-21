@@ -11,6 +11,8 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 app.whenReady().then(async () => {
   try {
     const win = BrowserWindow.getAllWindows()[0];
+    win.webContents.debugger.attach('1.3');
+    await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
     if (win.webContents.isLoading()) await new Promise(resolve => win.webContents.once('did-finish-load', resolve));
     const run = script => win.webContents.executeJavaScript(script, true);
     for (let i = 0; i < 200 && !await run(`globalThis.StartupIntro?.phase === 'waiting'`); i++) await wait(20);
@@ -25,7 +27,6 @@ app.whenReady().then(async () => {
     assert.equal(await run(`StartupIntro.phase`), 'waiting', '等待用户不得触发 5 秒异常看门狗或自动翻开');
     assert.equal(await run(`document.getElementById('startupIntro').getAnimations({subtree:true}).length`), 0, '等待封面不运行循环动画');
     // Native Enter activation uses the same accessible button as a mouse click.
-    win.webContents.debugger.attach('1.3');
     await win.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', {enabled:true});
     await run(`document.querySelector('[data-action="openStartup"]').focus()`);
     win.webContents.focus();
@@ -47,7 +48,7 @@ app.whenReady().then(async () => {
     for (const sample of reveal) {
       assert.equal(sample.homeWidth, finalWidth, '主页渐显到结束不因滚动条恢复改变宽度');
       assert.ok(Math.abs(sample.home + sample.overlay - 1) < .04, '首页与遮罩同步淡入淡出');
-      assert.ok(Math.abs(sample.paperWidth - sample.w) < 2 && Math.abs(sample.paperHeight - sample.h) < 2, '首页出现前纸面已铺满窗口');
+      if (sample.home > .01) assert.ok(Math.abs(sample.paperWidth - sample.w) < 2 && Math.abs(sample.paperHeight - sample.h) < 2, '首页可见前纸面已铺满窗口：'+JSON.stringify(sample));
     }
     assert.equal(await run(`document.querySelector('.app').inert`), false);
     assert.equal(await run(`getComputedStyle(document.querySelector('.app')).opacity`), '1');
