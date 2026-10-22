@@ -62,6 +62,12 @@ app.whenReady().then(async()=>{
    console.log('PASS: startup-edge --hang-escape (Esc usable before whenShown)');
   }else if(mode==='--hang-watchdog'||mode==='--hang-watchdog-delayed'){
    assert.equal(await run(`!!document.getElementById('startupIntro')`),true,'等待期遮罩必须存在');
+   // An unrooted forever-pending IPC promise can be collected: Electron then
+   // rejects the invocation with "reply was never sent". Force main-process
+   // collection so this fixture bug is reproducible instead of CI-dependent.
+   require('node:v8').setFlagsFromString('--expose-gc');
+   const collect=require('node:vm').runInNewContext('gc');
+   for(let i=0;i<6;i++){await wait(100);collect();}
    // Deliberately arrive after the renderer's timer has expired. Measuring
    // from this observer would report a few milliseconds rather than 5 s.
    if(mode==='--hang-watchdog-delayed')await wait(5200);

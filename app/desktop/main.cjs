@@ -35,7 +35,9 @@ else{
   win.on('leave-full-screen',()=>win.webContents.send('window:fullscreenChanged',false));
   handle('startup:mode',()=>({enabled:startupSession.enabled&&!startupSession.claimed}));
   handle('startup:claim',()=>{const first=!startupSession.claimed;startupSession.claimed=true;return {first,enabled:startupSession.enabled};});
-  handleAsync('startup:ready',()=>{if(startupHang)return new Promise(()=>{});startupSession.claimed=true;if(!startupSession.enabled||startupSession.ready)return {startedAt:0,enabled:false};startupSession.ready=true;if(startupSession.displayed){beginStartup();return startupSession.value;}return new Promise(resolve=>{startupSession.pending=resolve;});});
+  // Keep the deliberately stalled test invocation rooted, just like the real
+  // pending handshake; otherwise GC can close its native IPC reply channel.
+  handleAsync('startup:ready',()=>{if(startupHang)return new Promise(resolve=>{startupSession.pending=resolve;});startupSession.claimed=true;if(!startupSession.enabled||startupSession.ready)return {startedAt:0,enabled:false};startupSession.ready=true;if(startupSession.displayed){beginStartup();return startupSession.value;}return new Promise(resolve=>{startupSession.pending=resolve;});});
   handleAsync('photo:clipboard',readClipboardImage);
   handleAsync('image:copy',copyImage);
   const exportBookPdf=createBookPdfExporter({BrowserWindow,dialog,loadState:()=>storage.loadReferences()});
