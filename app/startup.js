@@ -61,8 +61,12 @@
     // the overlay before a delayed first composition has finished fading it.
     frame = requestAnimationFrame(() => {
       if (cleanupDone) return;
-      const origin = document.timeline.currentTime;
-      timing.animationStartedAt = performance.now();
+      // A long input task can leave document.timeline.currentTime at the
+      // previous frame even inside this callback. Using that stale value
+      // would start every effect hundreds of milliseconds into its duration.
+      // The default DocumentTimeline and performance share navigation origin.
+      const origin = performance.now();
+      timing.animationStartedAt = origin;
       for (const animation of animations) {
         animation.play();
         animation.startTime = origin;
