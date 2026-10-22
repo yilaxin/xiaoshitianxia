@@ -210,8 +210,8 @@ class StartupContractTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(pkg_path), "package.json missing")
         with open(pkg_path, encoding="utf-8") as fh:
             pkg = json.loads(fh.read())
-        self.assertEqual(pkg.get("version"), "0.3.2",
-                         "enlarged cover update requires version 0.3.2")
+        self.assertEqual(pkg.get("version"), "0.3.3",
+                         "CI stability update requires version 0.3.3")
 
         startup_css = os.path.join(PROJECT_DIR, "app", "startup.css")
         startup_js = os.path.join(PROJECT_DIR, "app", "startup.js")

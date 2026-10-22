@@ -33,14 +33,15 @@ app.whenReady().then(async () => {
     win.webContents.sendInputEvent({type:'keyDown', keyCode:'Enter'});
     win.webContents.sendInputEvent({type:'char', keyCode:'\r'});
     win.webContents.sendInputEvent({type:'keyUp', keyCode:'Enter'});
-    const start = Date.now();
     for (let i = 0; i < 20 && await run(`StartupIntro.phase === 'waiting'`); i++) await wait(20);
     const first = await run(`StartupIntro.phase`);
     assert.notEqual(first, 'waiting', '回车应打开封面');
     await run(`document.querySelector('[data-action="openStartup"]').click();StartupIntro.start();`);
     const samples = await run(`(async()=>{const samples=[];while(StartupIntro.active){const b=document.querySelector('.startup-paper-bridge'),r=b?.getBoundingClientRect();samples.push({time:performance.now(),phase:StartupIntro.phase,home:Number(getComputedStyle(document.querySelector('.app')).opacity),overlay:Number(getComputedStyle(document.getElementById('startupIntro')).opacity),paperOpacity:Number(getComputedStyle(b).opacity),paperWidth:r?.width,paperHeight:r?.height,homeWidth:document.querySelector('.app').getBoundingClientRect().width,w:innerWidth,h:innerHeight});await new Promise(r=>setTimeout(r,30));}return samples;})()`);
-    const elapsed = Date.now() - start;
-    assert.ok(elapsed >= 2350 && elapsed < 3500, '点击后保持约 2.6 秒，重复点击不重启：' + elapsed);
+    const timing = await run('StartupIntro.timing');
+    const elapsed = timing.finishedAt - timing.animationStartedAt;
+    assert.equal(timing.reason, 'complete', '应由动画完成收尾：'+JSON.stringify(timing));
+    assert.ok(elapsed >= 2550 && elapsed < 3500, '动画实际开始后保持约 2.6 秒，重复点击不重启：' + JSON.stringify(timing));
     const reveal = samples.filter(s => s.phase === 'revealing');
     const finalWidth = await run(`document.querySelector('.app').getBoundingClientRect().width`);
     assert.ok(reveal.length >= 3);

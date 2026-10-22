@@ -2,8 +2,14 @@ name: Windows build and compatibility
 
 on:
   push:
+    branches: [master]
   pull_request:
+    branches: [master]
   workflow_dispatch:
+
+concurrency:
+  group: windows-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -62,6 +68,8 @@ jobs:
         run: npm run test:pdf
       - name: Independent startup animation contract
         run: npm run test:startup-independent
+      - name: Repeated animation timing and readiness checks
+        run: npm run test:ci-stability
       - name: Create Windows release archive
         run: npm run release:windows -- --arch ${{ matrix.arch }}
       - name: Verify release architecture and contents
@@ -82,4 +90,14 @@ jobs:
           path: outputs/release/*
           compression-level: 0
           if-no-files-found: error
+          retention-days: 14
+      - name: Preserve failed animation diagnostics
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: animation-diagnostics-${{ matrix.arch }}
+          path: |
+            outputs/**/startup-checks/**
+            outputs/**/ci-stability/**
+          if-no-files-found: ignore
           retention-days: 14

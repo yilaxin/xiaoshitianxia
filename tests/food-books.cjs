@@ -17,7 +17,7 @@ app.whenReady().then(async()=>{try{
  await ready(`typeof FoodBooks!=='undefined'`);assert.deepEqual(errors,[]);
  // Windows Server runners may disable OS animations. Exercise the animated path
  // explicitly without changing the user's system accessibility preference.
- win.webContents.debugger.attach('1.3');await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await pause(80);
+ win.webContents.debugger.attach('1.3');await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await ready(`!matchMedia('(prefers-reduced-motion: reduce)').matches`);
  assert.equal(await run(`document.querySelectorAll('[data-book-kind]').length`),3);
  await click('[data-action="booksToggle"]');assert.equal(await run(`document.getElementById('bookSubnav').hidden`),true);await click('[data-action="booksToggle"]');
  await run(`FoodBooks.select('recipes')`);assert.equal(await run(`state.recipes[0].id`),'example-egg-fried-rice');
@@ -27,7 +27,7 @@ app.whenReady().then(async()=>{try{
  await pause(650);await capture('独家食谱-内置示例.png');
  await click('[data-action="deleteRecipe"]');await click('[data-action="confirmRecipeDelete"]');
  const exampleReload=new Promise(r=>win.webContents.once('did-finish-load',r));win.webContents.reload();await exampleReload;await ready(`typeof FoodBooks!=='undefined'`);
- await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await pause(80);
+ await win.webContents.debugger.sendCommand('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});await ready(`!matchMedia('(prefers-reduced-motion: reduce)').matches`);
  assert.equal(await run('state.recipes.length'),0,'A deleted example does not reappear on restart');
  await run(`FoodBooks.select('recipes')`);assert.match(await run(`document.getElementById('main').textContent`),/你的独家食谱/);
  await run(`openForm()`);assert.equal(await run(`!!document.querySelector('[data-action="newRecipeFromForm"]')`),true);await click('[data-action="newRecipeFromForm"]');
@@ -43,7 +43,7 @@ app.whenReady().then(async()=>{try{
  assert.equal(await run('FoodBooks.kind'),'recipes');assert.match(await run(`document.querySelector('#bookSpread').textContent`),/食材/);
  await capture('三本书-食谱开篇.png');
  await run(`void flipBook(1)`);await ready('!bookBusy&&state.bookIndex===1');assert.ok(await run(`document.querySelectorAll('#bookSpread .chapter-sheet').length`)>0);await run(`void flipBook(-1)`);await ready('!bookBusy&&state.bookIndex===0');
- await run(`bookCover=true;render()`);await click('[data-action="openBookAnimated"]');await ready(`!!document.querySelector('.book-cover-turner')`);assert.equal(await run(`document.querySelector('.book-front-face .cover-book-name').textContent`),'独家食谱');await ready('!bookBusy');
+ await run(`bookCover=true;render()`);const opening=await run(`(()=>{document.querySelector('[data-action="openBookAnimated"]').click();return {busy:bookBusy,cover:document.querySelector('.book-front-face .cover-book-name')?.textContent,animated:!!document.querySelector('.book-cover-turner')};})()`);assert.deepEqual(opening,{busy:true,cover:'独家食谱',animated:true});await ready('!bookBusy&&!bookCover&&!!document.getElementById("bookSpread")');
  const hasAll=await run(`(()=>{const pages=FoodBooks.pages;const blocks=pages.flatMap(p=>[p.left,p.right]).flatMap(s=>s.blocks||[]);return blocks.map(b=>b.text||b.name||b.title||'').join('\\n')})()`);assert.match(hasAll,/打散鸡蛋/);assert.match(hasAll,/炒香番茄/);assert.match(hasAll,/更嫩/);
  // Explicit linking does not synchronize future dish/recipe edits.
  await run(`FoodBooks.openRecipe('${id}')`);await run(`document.getElementById('recipeDishId').value=state.dishes[0].id`);await click('[data-action="recipeCopyDish"]');const linkedName=await run('state.dishes[0].name');assert.equal(await run(`document.getElementById('recipeName').value`),linkedName);

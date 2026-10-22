@@ -16,7 +16,10 @@ app.whenReady().then(async()=>{try{
  assert.ok(last.home>.98,'实际最后一帧必须完成主页渐显，不能被固定定时器截断：'+JSON.stringify(last));
  assert.ok(result.samples.filter(s=>s.phase==='revealing').every(s=>s.skip>.99),'过渡期间跳过按钮不能单独提前消失');
  // The final sample precedes completion by one frame; measure completion itself.
- assert.ok(result.elapsed>=2550&&result.elapsed<4600,'首次绘制延迟后仍完整播放 2.6 秒可见动画：'+JSON.stringify({elapsed:result.elapsed,last}));
+ const timing=await run('StartupIntro.timing');
+ assert.equal(timing.reason,'complete','应由动画完成收尾：'+JSON.stringify(timing));
+ const elapsed=timing.finishedAt-timing.animationStartedAt;
+ assert.ok(elapsed>=2550&&elapsed<3500,'首次绘制延迟后仍完整播放 2.6 秒可见动画：'+JSON.stringify({timing,last}));
  assert.deepEqual(fs.readFileSync(path.join(profile,'菜单资料.json')),saved);
  console.log('PASS: immediate cover click with delayed first frame; complete final fade; visible skip; no fixed-timer cut; cleanup and data preservation');app.exit(0);
 }catch(e){console.error(e.stack||e);app.exit(1)}});

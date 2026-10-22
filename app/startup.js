@@ -28,6 +28,9 @@
   let previousOverflow = { html: '', body: '' };
   let cancelLogoWait = null;
   let previousFocus = null;
+  // Renderer-local monotonic timestamps distinguish timeout protection from
+  // an earlier preparation failure, and do not depend on test-runner latency.
+  const timing = { preparationStartedAt: null, animationStartedAt: null, finishedAt: null, reason: null, detail: null };
 
   if (intro) intro.setAttribute('data-phase', phase);
 
@@ -59,6 +62,7 @@
     frame = requestAnimationFrame(() => {
       if (cleanupDone) return;
       const origin = document.timeline.currentTime;
+      timing.animationStartedAt = performance.now();
       for (const animation of animations) {
         animation.play();
         animation.startTime = origin;
@@ -113,8 +117,11 @@
     }
   }
 
-  function cleanup() {
+  function cleanup(reason = 'complete', detail = null) {
     if (cleanupDone) return;
+    timing.finishedAt = performance.now();
+    timing.reason = reason;
+    timing.detail = detail;
     cleanupDone = true;
     active = false;
     finished = true;
@@ -396,7 +403,7 @@
   function skip(reason) {
     if (finished || cleanupDone) return false;
     started = true;
-    cleanup();
+    cleanup(reason || 'skip');
     return true;
   }
 
@@ -405,27 +412,29 @@
     skip: skip,
     get active() { return active; },
     get phase() { return phase; },
-    get duration() { return DURATION; }
+    get duration() { return DURATION; },
+    get timing() { return { ...timing }; }
   };
   globalThis.StartupIntro = StartupIntro;
 
-  function removeOverlayImmediately() {
+  function removeOverlayImmediately(reason, detail = null) {
     if (cleanupDone) return;
     started = true;
     finished = true;
-    cleanup();
+    cleanup(reason, detail);
   }
 
   function boot() {
     if (!intro) return;
     bindListeners();
-    prepWatchdog = setTimeout(() => removeOverlayImmediately(), PREP_TIMEOUT_MS);
+    timing.preparationStartedAt = performance.now();
+    prepWatchdog = setTimeout(() => removeOverlayImmediately('preparation-timeout'), PREP_TIMEOUT_MS);
 
     const mode = nativeMode();
-    if (mode && mode.enabled === false) { removeOverlayImmediately(); return; }
+    if (mode && mode.enabled === false) { removeOverlayImmediately('disabled'); return; }
 
     const claim = nativeClaim();
-    if (claim && claim.first === false) { removeOverlayImmediately(); return; }
+    if (claim && claim.first === false) { removeOverlayImmediately('already-played'); return; }
 
     let enabledByPreference = true;
     try {
@@ -434,11 +443,11 @@
       }
     } catch (error) {}
 
-    if (!enabledByPreference) { removeOverlayImmediately(); return; }
+    if (!enabledByPreference) { removeOverlayImmediately('disabled'); return; }
 
     Promise.all([waitForLogo(), waitForShown()])
       .then(() => prepare())
-      .catch(() => removeOverlayImmediately());
+      .catch(error => removeOverlayImmediately('preparation-error', String(error?.message || error)));
   }
 
   boot();

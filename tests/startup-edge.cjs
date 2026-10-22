@@ -4,9 +4,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
 const args=new Set(process.argv.slice(1));
-const mode=['--escape','--button','--hang-escape','--hang-watchdog','--small'].find(m=>args.has(m));
+const mode=['--escape','--button','--hang-escape','--hang-watchdog','--hang-watchdog-delayed','--small'].find(m=>args.has(m));
 if(!mode) throw Error('startup-edge requires one mode: --escape, --button, --hang-escape, --hang-watchdog, --small');
-const hang=mode==='--hang-escape'||mode==='--hang-watchdog';
+const hang=mode.startsWith('--hang-');
 const project=path.resolve(__dirname,'..');
 const profile=fs.mkdtempSync(path.join(project,'work/startup-edge-'));
 process.env.XSTX_HEADLESS_TEST='1';
@@ -60,13 +60,18 @@ app.whenReady().then(async()=>{
    assert.ok(Date.now()-start<1200,'等待期 Esc 应快速释放遮罩');
    assert.equal(await run(`document.documentElement.classList.contains('startup-active')`),false);
    console.log('PASS: startup-edge --hang-escape (Esc usable before whenShown)');
-  }else if(mode==='--hang-watchdog'){
-   const start=Date.now();
+  }else if(mode==='--hang-watchdog'||mode==='--hang-watchdog-delayed'){
    assert.equal(await run(`!!document.getElementById('startupIntro')`),true,'等待期遮罩必须存在');
+   // Deliberately arrive after the renderer's timer has expired. Measuring
+   // from this observer would report a few milliseconds rather than 5 s.
+   if(mode==='--hang-watchdog-delayed')await wait(5200);
    assert.equal(await waitFor(`!document.getElementById('startupIntro') && StartupIntro.phase==='done'`,6500),true,'whenShown 未返回时看门狗必须在最多 5 秒释放');
-   const elapsed=Date.now()-start;
-   assert.ok(elapsed>3000,'看门狗不应过早释放，实际 '+elapsed+'ms');
-   assert.ok(elapsed<6000,'看门狗必须按最多 5 秒释放，实际 '+elapsed+'ms');
+   const timing=await run('StartupIntro.timing');
+   console.log('STARTUP_TIMING '+JSON.stringify(timing));
+   assert.equal(timing.reason,'preparation-timeout','必须验证真正的看门狗路径，提前失败不能冒充超时：'+JSON.stringify(timing));
+   const elapsed=timing.finishedAt-timing.preparationStartedAt;
+   assert.ok(elapsed>=4900,'看门狗不得过早释放，实际 '+elapsed+'ms');
+   assert.ok(elapsed<6500,'看门狗必须及时释放，实际 '+elapsed+'ms');
    assert.equal(await run(`StartupIntro.active`),false);
    assert.equal(await run(`document.documentElement.classList.contains('startup-active')`),false);
    console.log('PASS: startup-edge --hang-watchdog (bounded waiting release '+elapsed+'ms)');
@@ -100,6 +105,7 @@ app.whenReady().then(async()=>{
   win.webContents.debugger.detach();
   app.exit(0);
  }catch(error){
+  try{console.error('STARTUP_DIAGNOSTIC',await BrowserWindow.getAllWindows()[0]?.webContents.executeJavaScript(`JSON.stringify({timing:globalThis.StartupIntro?.timing,phase:globalThis.StartupIntro?.phase,logo:(()=>{const i=document.querySelector('[data-startup-logo]');return i?{complete:i.complete,width:i.naturalWidth}:null})()})`))}catch{}
   console.error(error.stack||error);
   try{BrowserWindow.getAllWindows()[0]?.webContents.debugger.detach()}catch(_e){}
   app.exit(1);
